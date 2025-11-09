@@ -36,10 +36,14 @@ class Settings:
         self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
         
         # Database
-        self.database_url = os.getenv(
+        database_url = os.getenv(
             'DATABASE_URL',
             'postgresql+asyncpg://ft9_user:ft9_password@localhost:5432/ft9_db'
         )
+        # Converter postgresql:// para postgresql+asyncpg:// automaticamente
+        if database_url.startswith('postgresql://') and not database_url.startswith('postgresql+asyncpg://'):
+            database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://', 1)
+        self.database_url = database_url
         
         # JWT Authentication
         self.secret_key = os.getenv(
