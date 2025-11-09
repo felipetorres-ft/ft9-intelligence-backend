@@ -43,9 +43,27 @@ async def get_db():
 async def init_db():
     """
     Inicializar banco de dados (criar tabelas)
+    Retry logic para aguardar o banco estar pronto
     """
+    import asyncio
+    import logging
     from database.models import Base
     
-    async with engine.begin() as conn:
-        # Criar todas as tabelas
-        await conn.run_sync(Base.metadata.create_all)
+    logger = logging.getLogger(__name__)
+    max_retries = 10
+    retry_delay = 3  # segundos
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            async with engine.begin() as conn:
+                # Criar todas as tabelas
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database initialized successfully")
+            return
+        except Exception as e:
+            if attempt < max_retries:
+                logger.warning(f"Database init attempt {attempt}/{max_retries} failed: {e}. Retrying in {retry_delay}s...")
+                await asyncio.sleep(retry_delay)
+            else:
+                logger.error(f"Database init failed after {max_retries} attempts: {e}")
+                raise
