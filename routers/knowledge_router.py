@@ -12,7 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/knowledge", tags=["Knowledge Base"])
+router = APIRouter(prefix="/api/v1/knowledge", tags=["Knowledge Base"])
 
 
 class AddKnowledgeRequest(BaseModel):

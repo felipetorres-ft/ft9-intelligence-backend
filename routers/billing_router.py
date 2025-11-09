@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/billing", tags=["Billing"])
+router = APIRouter(prefix="/api/v1/billing", tags=["Billing"])
 
 
 class CreateSubscriptionRequest(BaseModel):

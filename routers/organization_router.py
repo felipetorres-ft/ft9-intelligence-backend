@@ -18,7 +18,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/organizations", tags=["Organizations"])
+router = APIRouter(prefix="/api/v1/organizations", tags=["Organizations"])
 
 
 def generate_slug(name: str) -> str:
