@@ -1,0 +1,17 @@
+# Token Parcial Visualizado
+
+## Token 1 (primeiro screenshot):
+EAALMfpOYJ0ABP8ZAhAdMUvVqWlTElgpwC0n...
+
+## Token 2 (após clicar no campo):
+clxKKCzslIyhdZCJmZE1i2Cha3OSybm8xQ7zZBw...
+
+## Observações:
+- O token completo não está sendo extraído via JavaScript devido a restrições de segurança do Facebook
+- O campo está mascarado ou protegido
+- Precisamos de uma abordagem alternativa
+
+## Próximas Ações:
+1. Pedir ao usuário para copiar manualmente o token
+2. Ou usar a API do Facebook para gerar um token de longa duração
+3. Ou usar o token temporário diretamente da URL de callback
