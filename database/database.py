@@ -54,9 +54,8 @@ async def ensure_database_exists():
     parsed = urlparse(settings.DATABASE_URL)
     db_name = parsed.path.lstrip('/')
     
-    # URL para conectar no banco template1 (sempre existe)
-    template_url = settings.DATABASE_URL.replace(f'/{db_name}', '/template1')
-    template_url = template_url.replace('postgresql+asyncpg://', 'postgresql://')
+    # Construir URL para template1 mantendo as credenciais corretas
+    template_url = f"postgresql://{parsed.username}:{parsed.password}@{parsed.hostname}:{parsed.port or 5432}/template1"
     
     try:
         # Conectar no template1
