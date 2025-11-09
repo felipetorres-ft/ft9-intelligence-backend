@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info("Iniciando FT9 Intelligence Multi-Tenant...")
+    logger.info(f"DATABASE_URL: {settings.DATABASE_URL}")
     
     try:
         # Inicializar banco de dados
