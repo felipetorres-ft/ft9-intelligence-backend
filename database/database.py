@@ -40,6 +40,48 @@ async def get_db():
             await session.close()
 
 
+async def ensure_database_exists():
+    """
+    Garantir que o banco de dados existe, criando se necessário
+    """
+    import asyncpg
+    import logging
+    from urllib.parse import urlparse
+    
+    logger = logging.getLogger(__name__)
+    
+    # Parse DATABASE_URL
+    parsed = urlparse(settings.DATABASE_URL)
+    db_name = parsed.path.lstrip('/')
+    
+    # URL para conectar no banco template1 (sempre existe)
+    template_url = settings.DATABASE_URL.replace(f'/{db_name}', '/template1')
+    template_url = template_url.replace('postgresql+asyncpg://', 'postgresql://')
+    
+    try:
+        # Conectar no template1
+        conn = await asyncpg.connect(template_url)
+        
+        # Verificar se o banco existe
+        exists = await conn.fetchval(
+            "SELECT 1 FROM pg_database WHERE datname = $1",
+            db_name
+        )
+        
+        if not exists:
+            # Criar o banco
+            await conn.execute(f'CREATE DATABASE "{db_name}"')
+            logger.info(f"Database '{db_name}' created successfully")
+        else:
+            logger.info(f"Database '{db_name}' already exists")
+        
+        await conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"Error ensuring database exists: {e}")
+        return False
+
+
 async def init_db():
     """
     Inicializar banco de dados (criar tabelas)
@@ -52,6 +94,9 @@ async def init_db():
     logger = logging.getLogger(__name__)
     max_retries = 10
     retry_delay = 3  # segundos
+    
+    # Primeiro, garantir que o banco existe
+    await ensure_database_exists()
     
     for attempt in range(1, max_retries + 1):
         try:
