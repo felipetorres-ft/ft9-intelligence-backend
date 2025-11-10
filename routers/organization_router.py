@@ -72,38 +72,67 @@ async def create_organization(
         slug = f"{base_slug}-{counter}"
         counter += 1
     
-    # Criar organização
-    organization = Organization(
-        name=org_data.name,
-        slug=slug,
-        email=org_data.email,
-        phone=org_data.phone,
-        address=org_data.address,
-        city=org_data.city,
-        state=org_data.state
-    )
-    
-    db.add(organization)
-    await db.flush()  # Para obter o ID
-    
-    # Criar usuário admin
-    admin_user = User(
-        organization_id=organization.id,
-        email=org_data.admin_email,
-        hashed_password=get_password_hash(org_data.admin_password),
-        full_name=org_data.admin_full_name,
-        role=UserRole.ORG_ADMIN,
-        is_active=True,
-        is_verified=True
-    )
-    
-    db.add(admin_user)
-    await db.commit()
-    await db.refresh(organization)
-    
-    logger.info(f"Nova organização criada: {organization.name} ({organization.slug})")
-    
-    return organization
+    try:
+        logger.info(f"[CREATE_ORG] Iniciando criação de organização: {org_data.name}")
+        
+        # Criar organização
+        slug = generate_slug(org_data.name)
+        logger.info(f"[CREATE_ORG] Slug gerado: {slug}")
+        
+        organization = Organization(
+            name=org_data.name,
+            slug=slug,
+            email=org_data.email,
+            phone=org_data.phone,
+            address=org_data.address,
+            city=org_data.city,
+            state=org_data.state
+        )
+        logger.info(f"[CREATE_ORG] Objeto Organization criado")
+        
+        db.add(organization)
+        logger.info(f"[CREATE_ORG] Organization adicionado ao db")
+        
+        await db.flush()  # Para obter o ID
+        logger.info(f"[CREATE_ORG] Flush executado, org.id={organization.id}")
+        
+        # Criar usuário admin
+        logger.info(f"[CREATE_ORG] Gerando hash da senha...")
+        hashed_pwd = get_password_hash(org_data.admin_password)
+        logger.info(f"[CREATE_ORG] Hash gerado: {hashed_pwd[:20]}...")
+        
+        admin_user = User(
+            organization_id=organization.id,
+            email=org_data.admin_email,
+            hashed_password=hashed_pwd,
+            full_name=org_data.admin_full_name,
+            role=UserRole.ORG_ADMIN,
+            is_active=True,
+            is_verified=True
+        )
+        logger.info(f"[CREATE_ORG] Objeto User criado")
+        
+        db.add(admin_user)
+        logger.info(f"[CREATE_ORG] User adicionado ao db")
+        
+        await db.commit()
+        logger.info(f"[CREATE_ORG] Commit executado")
+        
+        await db.refresh(organization)
+        logger.info(f"[CREATE_ORG] Refresh executado")
+        
+        logger.info(f"[CREATE_ORG] ✅ Sucesso! Organização criada: {organization.name} ({organization.slug})")
+        
+        return organization
+        
+    except Exception as e:
+        logger.error(f"[CREATE_ORG] ❌ ERRO: {type(e).__name__}: {str(e)}")
+        logger.error(f"[CREATE_ORG] Traceback completo:", exc_info=True)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao criar organização: {str(e)}"
+        )
 
 
 @router.get("/me", response_model=OrganizationResponse)
