@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import logging
 from config import settings
 from database import init_db
-from routers import auth_router, organization_router, billing_router, knowledge_router, automation_router
+from routers import auth_router, organization_router, billing_router, knowledge_router, automation_router, debug_router
 
 # Configurar logging
 logging.basicConfig(
@@ -62,6 +62,7 @@ app.add_middleware(
 )
 
 # Incluir routers
+app.include_router(debug_router)
 app.include_router(auth_router)
 app.include_router(organization_router)
 app.include_router(billing_router)
