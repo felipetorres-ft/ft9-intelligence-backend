@@ -34,3 +34,4 @@ stripe==7.8.0
 # Utilities
 python-dateutil==2.8.2
 email-validator==2.1.0
+argon2-cffi==23.1.0

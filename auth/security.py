@@ -4,7 +4,8 @@ Sistema de autenticação e segurança JWT
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,13 +13,9 @@ from sqlalchemy import select
 from database import get_db, User
 from config import settings
 
-# Contexto de criptografia de senha
-# Configurar bcrypt para truncar automaticamente senhas longas
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__truncate_error=False  # Desabilitar erro de truncamento
-)
+# Contexto de criptografia de senha usando Argon2
+# Argon2 é mais moderno e NÃO tem limite de 72 bytes
+pwd_hasher = PasswordHasher()
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -26,19 +23,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verificar senha"""
-    # Truncar senha para 72 bytes (limite do bcrypt)
-    password_bytes = plain_password.encode('utf-8')[:72]
-    password_truncated = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.verify(password_truncated, hashed_password)
+    try:
+        pwd_hasher.verify(hashed_password, plain_password)
+        return True
+    except VerifyMismatchError:
+        return False
 
 
 def get_password_hash(password: str) -> str:
-    """Hash de senha"""
-    # Truncar senha para 72 bytes (limite do bcrypt)
-    # Cortar diretamente em 72 bytes para evitar erro do bcrypt
-    password_bytes = password.encode('utf-8')[:72]
-    password_truncated = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.hash(password_truncated)
+    """Hash de senha usando Argon2"""
+    return pwd_hasher.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
