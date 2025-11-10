@@ -13,7 +13,12 @@ from database import get_db, User
 from config import settings
 
 # Contexto de criptografia de senha
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configurar bcrypt para truncar automaticamente senhas longas
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False  # Desabilitar erro de truncamento
+)
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
