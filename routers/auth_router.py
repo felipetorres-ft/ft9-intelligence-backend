@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database import get_db, User
-from auth import verify_password, create_access_token
+from auth import verify_password, create_access_token, get_current_active_user
 from schemas import Token, LoginRequest
 import logging
 
@@ -99,3 +99,23 @@ async def login_json(
     logger.info(f"Login bem-sucedido: {user.email}")
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me")
+async def get_current_user_info(
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Obter informações do usuário atual
+    """
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role,
+        "organization_id": current_user.organization_id,
+        "is_active": current_user.is_active,
+        "is_verified": current_user.is_verified,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+        "last_login_at": current_user.last_login_at.isoformat() if current_user.last_login_at else None
+    }
