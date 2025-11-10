@@ -98,6 +98,8 @@ async def create_organization(
         
         # Criar usuário admin
         logger.info(f"[CREATE_ORG] Gerando hash da senha...")
+        logger.info(f"[CREATE_ORG] Senha recebida: {len(org_data.admin_password)} chars, {len(org_data.admin_password.encode('utf-8'))} bytes")
+        logger.info(f"[CREATE_ORG] Primeiros 50 chars: {org_data.admin_password[:50]}...")
         hashed_pwd = get_password_hash(org_data.admin_password)
         logger.info(f"[CREATE_ORG] Hash gerado: {hashed_pwd[:20]}...")
         
