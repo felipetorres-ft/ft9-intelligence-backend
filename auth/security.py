@@ -22,31 +22,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verificar senha"""
     # Truncar senha para 72 bytes (limite do bcrypt)
-    password_bytes = plain_password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-        password_truncated = password_bytes.decode('utf-8', errors='ignore')
-        while len(password_truncated.encode('utf-8')) > 72:
-            password_truncated = password_truncated[:-1]
-    else:
-        password_truncated = plain_password
+    password_bytes = plain_password.encode('utf-8')[:72]
+    password_truncated = password_bytes.decode('utf-8', errors='ignore')
     return pwd_context.verify(password_truncated, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """Hash de senha"""
     # Truncar senha para 72 bytes (limite do bcrypt)
-    # Garantir que a string final tenha no máximo 72 bytes
-    password_bytes = password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-        # Decodificar e re-encodar para garantir UTF-8 válido
-        password_truncated = password_bytes.decode('utf-8', errors='ignore')
-        # Re-encodar e verificar tamanho novamente
-        while len(password_truncated.encode('utf-8')) > 72:
-            password_truncated = password_truncated[:-1]
-    else:
-        password_truncated = password
+    # Cortar diretamente em 72 bytes para evitar erro do bcrypt
+    password_bytes = password.encode('utf-8')[:72]
+    password_truncated = password_bytes.decode('utf-8', errors='ignore')
     return pwd_context.hash(password_truncated)
 
 
