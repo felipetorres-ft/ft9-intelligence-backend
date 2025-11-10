@@ -38,6 +38,9 @@ async def create_organization(
     Criar nova organização (com usuário admin)
     Endpoint público para onboarding
     """
+    logger.info(f"[CREATE_ORG_START] Endpoint chamado!")
+    logger.info(f"[CREATE_ORG_START] org_data recebido: {org_data}")
+    
     # Verificar se email da organização já existe
     result = await db.execute(
         select(Organization).where(Organization.email == org_data.email)
