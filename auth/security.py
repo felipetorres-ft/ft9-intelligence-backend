@@ -112,3 +112,4 @@ def require_role(allowed_roles: list):
         return current_user
     
     return role_checker
+# Force rebuild Sun Nov  9 20:50:20 EST 2025
