@@ -85,7 +85,9 @@ class RAGService:
         db: AsyncSession,
         organization_id: int,
         query: str,
-        k: Optional[int] = None
+        k: Optional[int] = None,
+        category_filter: Optional[str] = None,
+        tags_filter: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """
         Buscar conhecimento relevante
@@ -111,13 +113,24 @@ class RAGService:
                     continue
                 
                 # Buscar no banco
-                result = await db.execute(
-                    select(KnowledgeBase).where(
-                        KnowledgeBase.id == knowledge_id,
-                        KnowledgeBase.is_active == True
-                    )
+                query_builder = select(KnowledgeBase).where(
+                    KnowledgeBase.id == knowledge_id,
+                    KnowledgeBase.is_active == True
                 )
+                
+                # Aplicar filtro de categoria se fornecido
+                if category_filter:
+                    query_builder = query_builder.where(KnowledgeBase.category == category_filter)
+                
+                result = await db.execute(query_builder)
                 knowledge = result.scalar_one_or_none()
+                
+                # Aplicar filtro de tags se fornecido
+                if knowledge and tags_filter:
+                    knowledge_tags = json.loads(knowledge.tags) if knowledge.tags else []
+                    # Verificar se alguma tag do filtro está nas tags do conhecimento
+                    if not any(tag in knowledge_tags for tag in tags_filter):
+                        continue
                 
                 if knowledge:
                     knowledge_results.append({
