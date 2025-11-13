@@ -1,5 +1,6 @@
 """
 FT9 Flow Manager - Gerenciador de Fluxos de Conversação
+Versão 2.0 - Integrado com 8 Fluxos Modulares
 Desenvolvido por AI9 para FT9 Intelligence
 Data: 13/11/2025
 """
@@ -8,13 +9,25 @@ import os
 from typing import Dict, Any, Optional
 import requests
 
+# Importar fluxos modulares
+from .flows import (
+    CaptureFlow,
+    SalesFlow,
+    ObjectionsFlow,
+    PTCFlow,
+    FamilyFlow,
+    UrgencyFlow,
+    ReturnFlow,
+    ClosingFlow
+)
+
 logger = logging.getLogger(__name__)
 
 
 class FT9Flow:
     """
     Gerenciador de fluxos de conversação do FT9 Intelligence
-    Integrado com GPT-5 e Knowledge Base PTC 2025
+    Versão 2.0 - Integrado com 8 fluxos modulares especializados
     """
     
     def __init__(self, memory_engine):
@@ -26,11 +39,32 @@ class FT9Flow:
         """
         self.memory = memory_engine
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        logger.info("FT9Flow inicializado com sucesso")
+        
+        # Inicializar fluxos modulares
+        self.capture_flow = CaptureFlow(memory_engine, self._chamar_gpt)
+        self.sales_flow = SalesFlow(memory_engine, self._chamar_gpt)
+        self.objections_flow = ObjectionsFlow(memory_engine, self._chamar_gpt)
+        self.ptc_flow = PTCFlow(memory_engine, self._chamar_gpt)
+        self.family_flow = FamilyFlow(memory_engine, self._chamar_gpt)
+        self.urgency_flow = UrgencyFlow(memory_engine, self._chamar_gpt)
+        self.return_flow = ReturnFlow(memory_engine, self._chamar_gpt)
+        self.closing_flow = ClosingFlow(memory_engine, self._chamar_gpt)
+        
+        logger.info("FT9Flow v2.0 inicializado com 8 fluxos modulares")
     
     def executar_fluxo(self, interpretacao: Dict[str, Any], usuario: str) -> str:
         """
         Executa o fluxo apropriado baseado na interpretação
+        
+        Ordem de prioridade:
+        1. UrgencyFlow (máxima prioridade)
+        2. ClosingFlow (conversão)
+        3. ObjectionsFlow (tratamento de objeções)
+        4. PTCFlow (programa específico)
+        5. FamilyFlow (expansão)
+        6. ReturnFlow (reativação)
+        7. SalesFlow (vendas)
+        8. CaptureFlow (captura inicial)
         
         Args:
             interpretacao: Dict com intenção e metadados
@@ -39,77 +73,118 @@ class FT9Flow:
         Returns:
             Resposta processada
         """
-        intent = interpretacao["intencao"]
-        
         try:
-            # Roteamento de fluxos
+            # 1. URGÊNCIA - Máxima prioridade
+            if self.urgency_flow.detectar(interpretacao):
+                logger.info(f"Acionando UrgencyFlow para {usuario}")
+                return self.urgency_flow.executar(interpretacao, usuario)
+            
+            # 2. FECHAMENTO - Alta prioridade (conversão)
+            if self.closing_flow.detectar(interpretacao):
+                logger.info(f"Acionando ClosingFlow para {usuario}")
+                return self.closing_flow.executar(interpretacao, usuario)
+            
+            # 3. OBJEÇÕES - Tratar antes de continuar vendas
+            if self.objections_flow.detectar(interpretacao):
+                logger.info(f"Acionando ObjectionsFlow para {usuario}")
+                resposta = self.objections_flow.executar(interpretacao, usuario)
+                
+                # Verificar próximo fluxo
+                proximo = self.objections_flow.proximo_fluxo(interpretacao)
+                if proximo:
+                    logger.info(f"Próximo fluxo sugerido: {proximo}")
+                
+                return resposta
+            
+            # 4. PTC - Programa específico
+            if self.ptc_flow.detectar(interpretacao):
+                logger.info(f"Acionando PTCFlow para {usuario}")
+                resposta = self.ptc_flow.executar(interpretacao, usuario)
+                
+                # Verificar próximo fluxo
+                proximo = self.ptc_flow.proximo_fluxo(interpretacao)
+                if proximo:
+                    logger.info(f"Próximo fluxo sugerido: {proximo}")
+                
+                return resposta
+            
+            # 5. FAMÍLIA - Expansão familiar
+            if self.family_flow.detectar(interpretacao):
+                logger.info(f"Acionando FamilyFlow para {usuario}")
+                return self.family_flow.executar(interpretacao, usuario)
+            
+            # 6. RETORNO - Reativação de inativos
+            if self.return_flow.detectar(interpretacao):
+                logger.info(f"Acionando ReturnFlow para {usuario}")
+                return self.return_flow.executar(interpretacao, usuario)
+            
+            # 7. VENDAS - Processo comercial
+            if self.sales_flow.detectar(interpretacao):
+                logger.info(f"Acionando SalesFlow para {usuario}")
+                resposta = self.sales_flow.executar(interpretacao, usuario)
+                
+                # Verificar próximo fluxo
+                proximo = self.sales_flow.proximo_fluxo(interpretacao)
+                if proximo:
+                    logger.info(f"Próximo fluxo sugerido: {proximo}")
+                
+                return resposta
+            
+            # 8. CAPTURA - Primeiro contato e qualificação
+            if self.capture_flow.detectar(interpretacao):
+                logger.info(f"Acionando CaptureFlow para {usuario}")
+                resposta = self.capture_flow.executar(interpretacao, usuario)
+                
+                # Verificar próximo fluxo
+                proximo = self.capture_flow.proximo_fluxo(interpretacao)
+                if proximo:
+                    logger.info(f"Próximo fluxo sugerido: {proximo}")
+                
+                return resposta
+            
+            # FALLBACK - Fluxos legados para compatibilidade
+            intent = interpretacao.get("intencao", "")
+            
             if intent == "agendamento":
                 return self._fluxo_agendamento(interpretacao, usuario)
-            
-            elif intent == "ptc_fluxo":
-                return self._fluxo_ptc(interpretacao, usuario)
-            
-            elif intent == "pergunta":
-                return self._fluxo_pergunta(interpretacao, usuario)
-            
-            elif intent == "saudacao":
-                return self._fluxo_saudacao(interpretacao, usuario)
-            
             elif intent == "ajuda":
                 return self._fluxo_ajuda(interpretacao, usuario)
-            
+            elif intent == "saudacao":
+                return self._fluxo_saudacao(interpretacao, usuario)
             else:
                 return self._fluxo_mensagem_livre(interpretacao, usuario)
                 
         except Exception as e:
-            logger.error(f"Erro ao executar fluxo {intent}: {str(e)}")
+            logger.error(f"Erro ao executar fluxo: {str(e)}")
             return "Desculpe, ocorreu um erro. Por favor, tente novamente."
     
+    # ========== FLUXOS LEGADOS (COMPATIBILIDADE) ==========
+    
     def _fluxo_agendamento(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo de agendamento"""
+        """Fluxo de agendamento (legado)"""
         persona = interpretacao.get("persona", {})
         nome = persona.get("identificacao", {}).get("nome", "")
         
-        if nome:
-            return f"Olá {nome}! Posso ajudar com agendamentos. Em breve teremos integração completa com agenda. Por enquanto, entre em contato pelo telefone (11) 99999-9999."
-        else:
-            return f"Olá! Posso ajudar com agendamentos. Em breve teremos integração completa com agenda. Por enquanto, entre em contato pelo telefone (11) 99999-9999."
-    
-    def _fluxo_ptc(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo PTC 2025 - Integrado com Knowledge Base"""
-        mensagem = interpretacao["mensagem_original"]
-        aula_numero = interpretacao.get("aula_numero")
+        saudacao = f"Olá {nome}! " if nome else "Olá! "
         
-        # Buscar na Knowledge Base (simulado - integrar com PostgreSQL real)
-        if aula_numero:
-            contexto = f"Pergunta sobre Aula {aula_numero} do PTC 2025"
-        else:
-            contexto = "Pergunta geral sobre PTC 2025"
-        
-        # Chamar GPT-5 com contexto
-        resposta = self._chamar_gpt5(
-            mensagem=mensagem,
-            contexto=contexto,
-            persona=interpretacao.get("persona")
-        )
-        
-        return resposta
-    
-    def _fluxo_pergunta(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo de perguntas gerais"""
-        mensagem = interpretacao["mensagem_original"]
-        
-        # Chamar GPT-5 para responder
-        resposta = self._chamar_gpt5(
-            mensagem=mensagem,
-            contexto="Pergunta geral",
-            persona=interpretacao.get("persona")
-        )
-        
-        return resposta
+        return f"""{saudacao}Vou te ajudar com o agendamento! 📅
+
+Para agendar sua sessão, preciso de algumas informações:
+
+1️⃣ **Qual unidade você prefere?**
+   → FT9 Moema
+   → FT9 Pinheiros
+   → FT9 Itaim
+
+2️⃣ **Qual melhor dia/horário?**
+   → Manhã (8h-12h)
+   → Tarde (13h-18h)
+   → Noite (18h-21h)
+
+Me conta suas preferências!"""
     
     def _fluxo_saudacao(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo de saudação"""
+        """Fluxo de saudação (legado)"""
         persona = interpretacao.get("persona", {})
         nome = persona.get("identificacao", {}).get("nome", "")
         
@@ -119,39 +194,49 @@ class FT9Flow:
             return "Olá! 👋 Sou o AI9, assistente inteligente da FT9. Como posso ajudar você hoje?"
     
     def _fluxo_ajuda(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo de ajuda"""
+        """Fluxo de ajuda (legado)"""
         return """🤖 **AI9 - Assistente FT9 Intelligence**
 
 Posso ajudar você com:
 
-📅 **Agendamentos** - Marcar consultas e horários
-📚 **PTC 2025** - Responder dúvidas sobre o curso
-❓ **Perguntas** - Responder suas dúvidas gerais
-💬 **Conversação** - Conversar naturalmente
+🩺 **Tratamentos** - Informações sobre fisioterapia
+📦 **Planos** - PTC 2025 e pacotes
+💰 **Preços** - Valores e formas de pagamento
+📅 **Agendamentos** - Marcar sua sessão
+❓ **Dúvidas** - Qualquer pergunta
 
 Como posso ajudar você hoje?"""
     
     def _fluxo_mensagem_livre(self, interpretacao: Dict, usuario: str) -> str:
-        """Fluxo de mensagem livre"""
-        mensagem = interpretacao["mensagem_original"]
+        """Fluxo de mensagem livre (legado)"""
+        mensagem = interpretacao.get("mensagem_original", "")
+        persona = interpretacao.get("persona", {})
         
-        # Chamar GPT-5 para resposta natural
-        resposta = self._chamar_gpt5(
+        # Chamar GPT para resposta natural
+        contexto = """Você é o AI9, assistente da FT9 Intelligence.
+
+Responda de forma natural, empática e profissional.
+Se a mensagem indicar interesse comercial, conduza para vendas.
+Se houver dúvidas, esclareça e ofereça ajuda."""
+        
+        resposta = self._chamar_gpt(
             mensagem=mensagem,
-            contexto="Conversação livre",
-            persona=interpretacao.get("persona")
+            contexto=contexto,
+            persona=persona
         )
         
         return resposta
     
-    def _chamar_gpt5(
+    # ========== FUNÇÕES AUXILIARES ==========
+    
+    def _chamar_gpt(
         self, 
         mensagem: str, 
         contexto: str, 
         persona: Optional[Dict] = None
     ) -> str:
         """
-        Chama GPT-5 para gerar resposta
+        Chama GPT para gerar resposta
         
         Args:
             mensagem: Mensagem do usuário
@@ -159,11 +244,11 @@ Como posso ajudar você hoje?"""
             persona: Dados da persona do usuário
             
         Returns:
-            Resposta gerada pelo GPT-5
+            Resposta gerada pelo GPT
         """
         try:
             # Construir prompt com contexto e persona
-            system_prompt = self._construir_system_prompt(persona)
+            system_prompt = self._construir_system_prompt(persona, contexto)
             
             # Chamar API OpenAI
             headers = {
@@ -175,9 +260,10 @@ Como posso ajudar você hoje?"""
                 "model": "gpt-4.1-mini",  # Usar modelo disponível no Manus
                 "messages": [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"{contexto}\n\n{mensagem}"}
+                    {"role": "user", "content": mensagem}
                 ],
-                "max_completion_tokens": 500
+                "max_completion_tokens": 500,
+                "temperature": 0.7
             }
             
             response = requests.post(
@@ -190,22 +276,27 @@ Como posso ajudar você hoje?"""
             if response.status_code == 200:
                 result = response.json()
                 resposta = result["choices"][0]["message"]["content"]
-                logger.info("Resposta GPT-5 gerada com sucesso")
+                logger.info("Resposta GPT gerada com sucesso")
                 return resposta
             else:
                 logger.error(f"Erro na API OpenAI: {response.status_code}")
                 return "Desculpe, não consegui processar sua mensagem no momento."
                 
         except Exception as e:
-            logger.error(f"Erro ao chamar GPT-5: {str(e)}")
+            logger.error(f"Erro ao chamar GPT: {str(e)}")
             return "Desculpe, ocorreu um erro ao processar sua mensagem."
     
-    def _construir_system_prompt(self, persona: Optional[Dict] = None) -> str:
+    def _construir_system_prompt(
+        self, 
+        persona: Optional[Dict] = None,
+        contexto_adicional: str = ""
+    ) -> str:
         """
-        Constrói o system prompt para GPT-5
+        Constrói o system prompt para GPT
         
         Args:
             persona: Dados da persona do usuário
+            contexto_adicional: Contexto adicional do fluxo
             
         Returns:
             System prompt personalizado
@@ -213,16 +304,25 @@ Como posso ajudar você hoje?"""
         # Prompt base AI9
         prompt = """Você é o AI9, assistente inteligente da FT9 Intelligence.
 
-Você foi desenvolvido com base na metodologia dos 9 Pilares do Empreendedorismo de Felipe Teixeira, especializada em empreendedorismo para área de saúde.
+Você foi desenvolvido por Felipe Torres (Felipe Teixeira) com base na metodologia dos 9 Pilares do Empreendedorismo, especializada em empreendedorismo para área de saúde.
 
 Características:
 - Profissional mas acessível
+- Empático e consultivo
 - Objetivo e direto
 - Baseado em dados reais
 - Transparente sobre limitações
 - Focado em resultados
 
-Responda de forma natural, clara e útil."""
+IMPORTANTE:
+- Seja natural e conversacional
+- Use emojis com moderação
+- Conduza para ação (agendamento, fechamento)
+- Sempre ofereça próximo passo claro"""
+        
+        # Adicionar contexto adicional do fluxo
+        if contexto_adicional:
+            prompt += f"\n\n{contexto_adicional}"
         
         # Adicionar informações da persona se disponível
         if persona:
