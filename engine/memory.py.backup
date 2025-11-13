@@ -1,0 +1,23 @@
+import os, json
+
+class FT9Memory:
+    def __init__(self, base_path="memory"):
+        self.base = base_path
+        self.core = self._load_json("core.json")
+        self.personas = self._load_dir("personas")
+        self.relationships = self._load_dir("relationships")
+
+    def _load_json(self, filename):
+        fp = os.path.join(self.base, filename)
+        if os.path.exists(fp):
+            return json.load(open(fp,"r"))
+        return {}
+
+    def _load_dir(self, folder):
+        p = os.path.join(self.base, folder)
+        data = {}
+        if not os.path.exists(p): return data
+        for f in os.listdir(p):
+            if f.endswith(".json"):
+                data[f.replace(".json","")] = json.load(open(os.path.join(p,f)))
+        return data

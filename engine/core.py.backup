@@ -1,0 +1,15 @@
+class FT9Core:
+    def __init__(self, memory_engine, flow_manager):
+        self.memory = memory_engine
+        self.flow = flow_manager
+
+    def interpretar(self, mensagem: str, usuario: str):
+        msg = mensagem.lower()
+        if "agendar" in msg: return {"intencao": "agendamento"}
+        if "ptc" in msg: return {"intencao": "ptc_fluxo"}
+        if "duvida" in msg: return {"intencao": "pergunta"}
+        return {"intencao": "mensagem_livre"}
+
+    def processar(self, mensagem: str, usuario: str):
+        interpretacao = self.interpretar(mensagem, usuario)
+        return self.flow.executar_fluxo(interpretacao, usuario)

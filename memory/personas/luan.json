@@ -1,0 +1,141 @@
+{
+  "identificacao": {
+    "nome": "Luan",
+    "sobrenome": "Teixeira",
+    "telefone": "+86_numero_do_luan",
+    "localizacao": "Shanghai, China",
+    "idade_aproximada": "25-30 anos",
+    "relacionamento": "Filho do Felipe Teixeira"
+  },
+  "fatos_confirmados": {
+    "localizacao": {
+      "cidade": "Shanghai",
+      "pais": "China",
+      "mencoes": 36,
+      "confianca": "alta"
+    },
+    "profissao": {
+      "area": "Cloud Computing + Saúde Digital",
+      "tecnologias": [
+        "Azure",
+        "AWS",
+        "Google Cloud"
+      ],
+      "especialidade": "Inovação em Equipamentos Médicos Digitais",
+      "confianca": "alta"
+    },
+    "educacao": {
+      "instituicao": "Universidade de Ciência e Tecnologia de Shanghai (USST)",
+      "programa": "Advanced Training Program for Smart Medical Equipment Innovation",
+      "status": "Participante do programa de talentos do governo chinês",
+      "confianca": "alta"
+    },
+    "renda": {
+      "faixa": "500.000-2.000.000 ¥/ano",
+      "beneficios": [
+        "Moradia",
+        "Estudo",
+        "Alimentação"
+      ],
+      "confianca": "média"
+    }
+  },
+  "perfil_psicologico": {
+    "personalidade": {
+      "tracos_principais": [
+        "Analítico",
+        "Pragmático",
+        "Focado em soluções",
+        "Direto"
+      ],
+      "estilo_decisao": "Baseado em dados e lógica"
+    },
+    "comunicacao": {
+      "estilo": "Direta, concisa, técnica quando necessário",
+      "tom": "Casual mas profissional",
+      "preferencias": [
+        "Objetividade",
+        "Clareza",
+        "Eficiência"
+      ]
+    },
+    "valores": {
+      "principais": [
+        "Eficiência",
+        "Organização",
+        "Produtividade",
+        "Família",
+        "Carreira"
+      ]
+    },
+    "interesses": {
+      "profissionais": [
+        "Tecnologia",
+        "Cloud Computing",
+        "Saúde Digital",
+        "Inovação"
+      ],
+      "pessoais": [
+        "Família",
+        "Carreira",
+        "Desenvolvimento pessoal"
+      ]
+    }
+  },
+  "relacao_com_FT": {
+    "tipo": "Familiar - Pai e filho",
+    "proximidade": "Alta",
+    "dinamica": "Direta, focada em assuntos práticos",
+    "historico": {
+      "periodo_analisado": "01/03/2022 até 10/11/2025",
+      "total_mensagens": 18434,
+      "mensagens_limpas": true,
+      "bug_removido": "3999 mensagens da Meta AI (08/11/2025)"
+    }
+  },
+  "AI9_modulacao": {
+    "tom_recomendado": "Profissional mas acessível, direto e objetivo",
+    "abordagem": "Baseada em dados e fatos, evitar prolixidade",
+    "personalizacao": [
+      "Usar nome (Luan) em saudações",
+      "Reconhecer contexto de Shanghai/China quando relevante",
+      "Respeitar estilo de comunicação direta",
+      "Focar em eficiência e resultados"
+    ],
+    "evitar": [
+      "Excesso de formalidade",
+      "Prolixidade",
+      "Informações não verificadas",
+      "Suposições sem base"
+    ]
+  },
+  "memory_embeddings": {
+    "keywords_principais": [
+      "Shanghai",
+      "China",
+      "Azure",
+      "AWS",
+      "Cloud",
+      "Trabalho",
+      "Empresa",
+      "USST",
+      "Tecnologia",
+      "Saúde Digital"
+    ],
+    "contextos_frequentes": [
+      "Discussões sobre trabalho e carreira",
+      "Tecnologia e cloud computing",
+      "Vida em Shanghai",
+      "Relação familiar"
+    ]
+  },
+  "score_conhecimento": 80,
+  "ultima_atualizacao": "13/11/2025",
+  "fonte_dados": "Backup WhatsApp (18.434 mensagens) + Análise AI9 híbrida",
+  "metadados": {
+    "criado_por": "AI9",
+    "metodo_analise": "Sistema híbrido (extração factual + análise psicológica)",
+    "versao_persona": "1.0",
+    "proxima_atualizacao": "Quando houver novas conversas significativas"
+  }
+}

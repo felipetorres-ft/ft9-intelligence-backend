@@ -1,0 +1,11 @@
+class FT9Flow:
+    def __init__(self, memory_engine):
+        self.memory = memory_engine
+
+    def executar_fluxo(self, interpretacao, usuario):
+        intent = interpretacao["intencao"]
+        if intent == "agendamento":
+            return f"Olá {usuario}, posso ajudar com agendamentos."
+        if intent == "ptc_fluxo":
+            return "Fluxo PTC iniciado."
+        return "Mensagem recebida!"
