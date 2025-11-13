@@ -17,6 +17,9 @@ from session_manager import session_manager
 # Importar FT9 Engine
 from engine import FT9Core, FT9Flow, FT9Memory, WhatsAppGateway
 
+# Importar Routers
+from routers import funnel, dashboard
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -38,6 +41,10 @@ app = FastAPI(
     description="Direct WhatsApp Business API integration with FT9 Intelligence Engine",
     version="2.0.0"
 )
+
+# Include routers
+app.include_router(funnel.router, prefix="/funnel", tags=["funnel"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 
 
 # Pydantic models for request validation
