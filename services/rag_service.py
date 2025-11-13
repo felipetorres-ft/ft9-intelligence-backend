@@ -33,7 +33,7 @@ class RAGService:
         source: Optional[str] = None,
         category: Optional[str] = None,
         tags: Optional[List[str]] = None
-    ) -> int:
+    ) -> Dict[str, Any]:
         """
         Adicionar conhecimento à base
         """
@@ -73,7 +73,16 @@ class RAGService:
             
             logger.info(f"Conhecimento adicionado: ID {knowledge.id}")
             
-            return knowledge.id
+            # Retornar objeto completo
+            return {
+                "id": knowledge.id,
+                "title": knowledge.title,
+                "content": knowledge.content,
+                "source": knowledge.source,
+                "category": knowledge.category,
+                "tags": knowledge.tags,
+                "created_at": knowledge.created_at.isoformat() if knowledge.created_at else None
+            }
         
         except Exception as e:
             logger.error(f"Erro ao adicionar conhecimento: {e}")

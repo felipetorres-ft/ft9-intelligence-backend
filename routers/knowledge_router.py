@@ -43,7 +43,7 @@ async def add_knowledge(
     Adicionar conhecimento à base
     """
     try:
-        knowledge_id = await rag_service.add_knowledge(
+        knowledge = await rag_service.add_knowledge(
             db=db,
             organization_id=current_user.organization_id,
             title=request.title,
@@ -53,10 +53,8 @@ async def add_knowledge(
             tags=request.tags
         )
         
-        return {
-            "success": True,
-            "knowledge_id": knowledge_id
-        }
+        # Retornar objeto completo (compatível com frontend)
+        return knowledge
     
     except Exception as e:
         logger.error(f"Erro ao adicionar conhecimento: {e}")
@@ -86,10 +84,8 @@ async def list_knowledge(
             offset=offset
         )
         
-        return {
-            "knowledges": knowledges,
-            "total": len(knowledges)
-        }
+        # Retornar array diretamente (compatível com frontend)
+        return knowledges
     
     except Exception as e:
         logger.error(f"Erro ao listar conhecimentos: {e}")
