@@ -19,7 +19,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/knowledge", tags=["Knowledge Base"])
+router = APIRouter(tags=["Knowledge Base"])
 
 
 # ========== SCHEMAS ==========
