@@ -229,3 +229,34 @@ async def get_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@router.get("/count")
+async def get_count(
+    organization_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Obter contagem de documentos da organização (endpoint público)
+    Usado pelo Dashboard para exibir estatísticas
+    """
+    try:
+        from sqlalchemy import select, func
+        from database import KnowledgeBase
+        
+        result = await db.execute(
+            select(func.count(KnowledgeBase.id)).where(
+                KnowledgeBase.organization_id == organization_id,
+                KnowledgeBase.is_active == True
+            )
+        )
+        count = result.scalar()
+        
+        return {"count": count if count else 0}
+        
+    except Exception as e:
+        logger.error(f"Erro ao contar documentos: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
