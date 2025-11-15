@@ -1,271 +1,122 @@
-"""
-Rotas de Knowledge Base (FT9-Memory) - VERSÃO HÍBRIDA
-Suporta autenticação JWT (frontend) E chamadas públicas (testes)
-Criado em 15/11/2025
-"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+# knowledge_router.py — FT9 Intelligence
+# Versão AI9 — Rotas completas: ADD, SEARCH, RAG, COUNT
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
-from database import get_db
-from database.models import Organization
-from routers.auth_router import get_current_org
-from services import rag_service
-from pydantic import BaseModel
-import logging
+from sqlalchemy.future import select
+import sqlalchemy as sa
+import openai
 
-logger = logging.getLogger(__name__)
+from database import get_async_session
+from models.knowledge import Knowledge
+from services.embedding_service import generate_embedding
+from schemas.knowledge_schemas import KnowledgeCreate, KnowledgeOut
 
-router = APIRouter(prefix="/api/v1/knowledge", tags=["Knowledge Base"])
+router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
 
-
-class AddKnowledgeRequest(BaseModel):
-    title: str
-    content: str
-    source: Optional[str] = None
-    category: Optional[str] = None
-    tags: Optional[List[str]] = None
-
-
-class RAGQueryRequest(BaseModel):
-    query: str
-    system_prompt: Optional[str] = None
-
-
-@router.post("/")
+# -----------------------------------------------------
+# 1) ADD — adicionar documento na Knowledge Base
+# -----------------------------------------------------
+@router.post("/", response_model=KnowledgeOut)
 async def add_knowledge(
-    request: AddKnowledgeRequest,
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org)
+    payload: KnowledgeCreate,
+    session: AsyncSession = Depends(get_async_session)
 ):
-    """
-    Adicionar conhecimento à base (autenticado via JWT)
-    """
-    try:
-        knowledge = await rag_service.add_knowledge(
-            db=db,
-            organization_id=current_org.id,
-            title=request.title,
-            content=request.content,
-            source=request.source,
-            category=request.category,
-            tags=request.tags
-        )
-        
-        logger.info(f"Knowledge added: {knowledge.id} for org {current_org.id}")
-        
-        return {
-            "id": knowledge.id,
-            "title": knowledge.title,
-            "content": knowledge.content,
-            "category": knowledge.category,
-            "tags": knowledge.tags,
-            "created_at": knowledge.created_at.isoformat() if knowledge.created_at else None
-        }
-    except Exception as e:
-        logger.error(f"Error adding knowledge: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao adicionar conhecimento: {str(e)}"
-        )
+    # Gerar embedding
+    embedding = await generate_embedding(payload.content)
+    
+    new_doc = Knowledge(
+        title=payload.title,
+        category=payload.category,
+        content=payload.content,
+        embedding=embedding,
+        organization_id=1  # Ajustar se houver multi-tenant real
+    )
+    
+    session.add(new_doc)
+    await session.commit()
+    await session.refresh(new_doc)
+    
+    return new_doc
 
-
-@router.get("/")
-async def list_knowledge(
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org),
-    limit: int = Query(default=10, ge=1, le=100)
-):
-    """
-    Listar conhecimentos da organização (autenticado via JWT)
-    """
-    try:
-        knowledge_list = await rag_service.list_knowledge(
-            db=db,
-            organization_id=current_org.id,
-            limit=limit
-        )
-        
-        return [
-            {
-                "id": k.id,
-                "title": k.title,
-                "content": k.content[:200] + "..." if len(k.content) > 200 else k.content,
-                "category": k.category,
-                "tags": k.tags,
-                "created_at": k.created_at.isoformat() if k.created_at else None
-            }
-            for k in knowledge_list
-        ]
-    except Exception as e:
-        logger.error(f"Error listing knowledge: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar conhecimentos: {str(e)}"
-        )
-
-
-@router.get("/search")
-async def search_knowledge(
-    query: str = Query(..., description="Termo de busca"),
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org),
-    k: int = Query(default=5, ge=1, le=20, description="Número de resultados")
-):
-    """
-    Buscar conhecimentos por similaridade semântica (autenticado via JWT)
-    """
-    try:
-        results = await rag_service.search_knowledge(
-            db=db,
-            organization_id=current_org.id,
-            query=query,
-            k=k
-        )
-        
-        return [
-            {
-                "id": r.id,
-                "title": r.title,
-                "content": r.content[:300] + "..." if len(r.content) > 300 else r.content,
-                "category": r.category,
-                "similarity": getattr(r, 'similarity', None),
-                "created_at": r.created_at.isoformat() if r.created_at else None
-            }
-            for r in results
-        ]
-    except Exception as e:
-        logger.error(f"Error searching knowledge: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao buscar conhecimentos: {str(e)}"
-        )
-
-
-@router.post("/rag")
-async def rag_query(
-    request: RAGQueryRequest,
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org)
-):
-    """
-    Fazer pergunta usando RAG (autenticado via JWT)
-    """
-    try:
-        answer = await rag_service.query_with_rag(
-            db=db,
-            organization_id=current_org.id,
-            query=request.query,
-            system_prompt=request.system_prompt
-        )
-        
-        return {
-            "answer": answer.get("answer", ""),
-            "sources": [
-                {
-                    "id": s.id,
-                    "title": s.title,
-                    "content": s.content[:200] + "..." if len(s.content) > 200 else s.content,
-                    "similarity": getattr(s, 'similarity', None)
-                }
-                for s in answer.get("sources", [])
-            ],
-            "model": answer.get("model", "unknown")
-        }
-    except Exception as e:
-        logger.error(f"Error in RAG query: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao gerar resposta: {str(e)}"
-        )
-
-
-@router.get("/stats")
-async def get_stats(
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org)
-):
-    """
-    Obter estatísticas da Knowledge Base (autenticado via JWT)
-    """
-    try:
-        stats = await rag_service.get_stats(db=db, organization_id=current_org.id)
-        return stats
-    except Exception as e:
-        logger.error(f"Error getting stats: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao obter estatísticas: {str(e)}"
-        )
-
-
+# -----------------------------------------------------
+# 2) COUNT — contar documentos
+# -----------------------------------------------------
 @router.get("/count")
-async def get_count(
-    db: AsyncSession = Depends(get_db),
-    organization_id: Optional[int] = Query(None, description="ID da organização (público)"),
-    current_org: Optional[Organization] = Depends(get_current_org)
+async def count_knowledge(
+    session: AsyncSession = Depends(get_async_session)
 ):
-    """
-    Obter contagem de documentos
-    Suporta JWT (frontend) ou organization_id (público)
-    """
-    try:
-        # Priorizar JWT se disponível, senão usar organization_id público
-        org_id = current_org.id if current_org else organization_id
-        
-        if not org_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="organization_id é obrigatório quando não autenticado"
-            )
-        
-        from database.models import KnowledgeBase
-        from sqlalchemy import select, func
-        
-        result = await db.execute(
-            select(func.count(KnowledgeBase.id))
-            .where(KnowledgeBase.organization_id == org_id)
-        )
-        count = result.scalar() or 0
-        
-        return {"count": count}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting count: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao contar documentos: {str(e)}"
-        )
+    q = await session.execute(select(sa.func.count(Knowledge.id)))
+    return {"count": q.scalar()}
 
-
-@router.delete("/{knowledge_id}")
-async def delete_knowledge(
-    knowledge_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org)
+# -----------------------------------------------------
+# 3) SEARCH — busca por similaridade (pgvector)
+# -----------------------------------------------------
+@router.get("/search", response_model=list[KnowledgeOut])
+async def search_knowledge(
+    query: str,
+    session: AsyncSession = Depends(get_async_session)
 ):
-    """
-    Deletar conhecimento (autenticado via JWT)
-    """
-    try:
-        success = await rag_service.delete_knowledge(
-            db=db,
-            knowledge_id=knowledge_id,
-            organization_id=current_org.id
+    query_emb = await generate_embedding(query)
+    
+    stmt = sa.text("""
+        SELECT id, title, category, content, created_at,
+               1 - (embedding <=> :query_emb) AS score
+        FROM knowledge
+        ORDER BY embedding <=> :query_emb
+        LIMIT 5;
+    """)
+    
+    result = await session.execute(stmt, {"query_emb": query_emb})
+    rows = result.fetchall()
+    
+    return [
+        KnowledgeOut(
+            id=r.id,
+            title=r.title,
+            category=r.category,
+            content=r.content,
+            created_at=r.created_at
         )
-        
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conhecimento não encontrado"
-            )
-        
-        return {"message": "Conhecimento deletado com sucesso"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting knowledge: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao deletar conhecimento: {str(e)}"
-        )
+        for r in rows
+    ]
+
+# -----------------------------------------------------
+# 4) RAG — resposta baseada em contexto (FT9 + OpenAI)
+# -----------------------------------------------------
+@router.post("/rag")
+async def ask_rag(
+    question: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    # 1) Buscar contexto
+    context_docs = await search_knowledge(question, session)
+    
+    if not context_docs:
+        raise HTTPException(404, "Nenhum documento encontrado para RAG.")
+    
+    # 2) Montar contexto
+    context_text = "\n---\n".join([doc.content for doc in context_docs])
+    
+    prompt = f"""
+Responda a seguinte pergunta usando SOMENTE o contexto abaixo
+e seguindo a metodologia FT9 (9 Pilares + PTC).
+
+Pergunta:
+{question}
+
+Contexto:
+{context_text}
+
+Resposta:
+"""
+    
+    # 3) Chamar OpenAI
+    resp = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+        max_tokens=400
+    )
+    
+    return {"answer": resp.choices[0].message["content"]}

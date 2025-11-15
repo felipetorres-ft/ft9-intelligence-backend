@@ -1,29 +1,26 @@
-# FT9 Intelligence Platform - Production Docker Image
+# Dockerfile — FT9 Intelligence Backend (Python 3.11)
 FROM python:3.11-slim
 
-# Set working directory
+# Evitar interações
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Install system dependencies
+# Instalar dependências do sistema (necessárias para psycopg2 e pgvector)
 RUN apt-get update && apt-get install -y \
-    gcc \
-    postgresql-client \
+    build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copiar requirements
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar dependências Python
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-# Copy application code
+# Copiar código do backend
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p logs data uploads
-
-# Expose port (Railway will set PORT env var)
-EXPOSE 8000
-
-# Run the application with dynamic port
-CMD uvicorn main_multitenant:app --host 0.0.0.0 --port ${PORT:-8000}
+# Rodar usando uvicorn — Railway usa este comando
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
