@@ -371,16 +371,16 @@ Seja claro, objetivo e educativo."""
 
 @router.get("/count")
 async def get_count(
-    db: AsyncSession = Depends(get_db),
-    current_org: Organization = Depends(get_current_org)
+    organization_id: int,
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Obter contagem de documentos da organização
+    Obter contagem de documentos da organização (endpoint público)
     """
     try:
         result = await db.execute(
             select(func.count(Knowledge.id)).where(
-                Knowledge.organization_id == current_org.id,
+                Knowledge.organization_id == organization_id,
                 Knowledge.is_active == True
             )
         )
