@@ -14,6 +14,9 @@ from whatsapp_client import whatsapp_client
 from ai_processor import ai_processor
 from session_manager import session_manager
 
+# Importar Routers
+from routers import knowledge_router_v2
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -23,10 +26,13 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="FT9 WhatsApp Integration",
+    title="FT9 Intelligence Platform",
     description="Direct WhatsApp Business API integration with AI processing",
-    version="1.0.0"
+    version="2.0.0"
 )
+
+# Include routers
+app.include_router(knowledge_router_v2.router, prefix="/api/v1/knowledge", tags=["knowledge"])
 
 
 # Pydantic models for request validation
@@ -42,10 +48,17 @@ class WebhookMessage(BaseModel):
 async def root():
     """Health check endpoint"""
     return {
+        "service": "FT9 Intelligence Platform",
+        "version": "2.0.0",
         "status": "online",
-        "service": "FT9 WhatsApp Integration",
-        "version": "1.0.0",
-        "active_sessions": session_manager.get_active_sessions_count()
+        "features": [
+            "Multi-Tenant Architecture",
+            "WhatsApp Business API",
+            "AI Processing with GPT-4.1",
+            "JWT Authentication",
+            "PostgreSQL Database",
+            "Knowledge Base with RAG"
+        ]
     }
 
 
