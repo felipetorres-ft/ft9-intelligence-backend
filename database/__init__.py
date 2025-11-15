@@ -1,8 +1,18 @@
 """
 Database module for FT9 Intelligence
 """
-from database.database import get_db, init_db, engine, AsyncSessionLocal
-from database.models import (
+from .database import (
+    get_db,
+    init_db,
+    engine,
+    AsyncSessionLocal,
+)
+
+# EXPORTAÇÃO NECESSÁRIA (PATCH AI9)
+from .database import get_async_session
+
+# Modelos e enums
+from .models import (
     Base,
     Organization,
     User,
@@ -11,7 +21,7 @@ from database.models import (
     KnowledgeBase,
     UserRole,
     SubscriptionPlan,
-    SubscriptionStatus
+    SubscriptionStatus,
 )
 
 __all__ = [
@@ -19,6 +29,7 @@ __all__ = [
     "init_db",
     "engine",
     "AsyncSessionLocal",
+    "get_async_session",  # essencial
     "Base",
     "Organization",
     "User",
@@ -27,5 +38,5 @@ __all__ = [
     "KnowledgeBase",
     "UserRole",
     "SubscriptionPlan",
-    "SubscriptionStatus"
+    "SubscriptionStatus",
 ]
