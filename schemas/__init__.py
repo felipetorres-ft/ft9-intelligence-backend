@@ -14,3 +14,5 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+__all__ = ["Token", "TokenData", "LoginRequest"]
