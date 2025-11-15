@@ -28,10 +28,13 @@ class OrganizationBase(BaseModel):
 class OrganizationCreate(OrganizationBase):
     pass
 
+class OrganizationUpdate(OrganizationBase):
+    pass
+
 class Organization(OrganizationBase):
     id: int
 
     class Config:
         orm_mode = True
 
-__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "Organization"]
+__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "OrganizationUpdate", "Organization"]
