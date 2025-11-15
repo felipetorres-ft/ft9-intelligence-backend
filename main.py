@@ -7,7 +7,13 @@ import uvicorn
 import logging
 
 # Routers
+from routers.auth_router import router as auth_router
+from routers.automation_router import router as automation_router
+from routers.billing_router import router as billing_router
 from routers.knowledge_router import router as knowledge_router
+from routers.organization_router import router as organization_router
+from routers.dashboard import router as dashboard_router
+from routers.funnel import router as funnel_router
 
 # ------------------------------------------------------
 # LOGGING (IMPORTANTE PARA DIAGNÓSTICO NO RAILWAY)
@@ -51,7 +57,13 @@ logger.info("🟢 CORS carregado com sucesso.")
 def root():
     return {"status": "OK", "message": "FT9 Backend online — versão AI9"}
 
+app.include_router(auth_router)
+app.include_router(automation_router)
+app.include_router(billing_router)
 app.include_router(knowledge_router, prefix="/api/v1")
+app.include_router(organization_router)
+app.include_router(dashboard_router)
+app.include_router(funnel_router)
 
 # ------------------------------------------------------
 # RODAR LOCALMENTE (Railway ignora)

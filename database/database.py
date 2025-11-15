@@ -111,3 +111,11 @@ async def init_db():
             else:
                 logger.error(f"Database init failed after {max_retries} attempts: {e}")
                 raise
+
+
+async def get_async_session():
+    """
+    Alias para get_db, mantido para compatibilidade com routers antigos.
+    """
+    async for session in get_db():
+        yield session

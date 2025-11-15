@@ -1,5 +1,5 @@
 # auth.py – alias das funções de segurança
-from security import (
+from auth.security import (
     verify_password,
     get_password_hash,
     create_access_token,
