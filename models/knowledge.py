@@ -1,8 +1,7 @@
 # models/knowledge.py — FT9 Intelligence
-# Versão AI9 — Tabela Knowledge com suporte a pgvector
+# Versão AI9 Patch 3 — VECTOR removido (pgvector não disponível no Railway)
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import VECTOR
 from database import Base
 
 class Knowledge(Base):
@@ -12,11 +11,10 @@ class Knowledge(Base):
     title = Column(String(255), nullable=False)
     category = Column(String(100), nullable=True)
     content = Column(Text, nullable=False)
-    
-    # Embedding (1536 dimensões — modelo OpenAI)
-    embedding = Column(VECTOR(1536))
-    
-    # Multi-tenant (organização)
+
+    # REMOVIDO: pgvector → não suportado no Railway
+    # embedding = Column(VECTOR(1536))
+    embedding = Column(Text)  # JSON string ou lista serializada
+
     organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
-    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
