@@ -1,7 +1,7 @@
 """
 Authentication module for FT9 Intelligence
 """
-from auth.security import (
+from .security import (
     verify_password,
     get_password_hash,
     create_access_token,
