@@ -1,14 +1,11 @@
 """
-Rotas de Knowledge Base (FT9-Memory) - VERSÃO CORRIGIDA
-Correções implementadas em 15/11/2025:
-- Endpoints públicos (sem autenticação JWT)
-- Endpoint /search com GET
-- organization_id como parâmetro obrigatório
+Rotas de Knowledge Base (FT9-Memory)
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
-from database import get_db
+from database import get_db, User
+from auth import get_current_active_user
 from services import rag_service
 from pydantic import BaseModel
 import logging
@@ -19,7 +16,6 @@ router = APIRouter(prefix="/api/v1/knowledge", tags=["Knowledge Base"])
 
 
 class AddKnowledgeRequest(BaseModel):
-    organization_id: int
     title: str
     content: str
     source: Optional[str] = None
@@ -27,8 +23,12 @@ class AddKnowledgeRequest(BaseModel):
     tags: Optional[List[str]] = None
 
 
+class SearchKnowledgeRequest(BaseModel):
+    query: str
+    k: Optional[int] = 3
+
+
 class RAGQueryRequest(BaseModel):
-    organization_id: int
     query: str
     system_prompt: Optional[str] = None
 
@@ -36,15 +36,16 @@ class RAGQueryRequest(BaseModel):
 @router.post("/")
 async def add_knowledge(
     request: AddKnowledgeRequest,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Adicionar conhecimento à base (endpoint público)
+    Adicionar conhecimento à base
     """
     try:
         knowledge = await rag_service.add_knowledge(
             db=db,
-            organization_id=request.organization_id,
+            organization_id=current_user.organization_id,
             title=request.title,
             content=request.content,
             source=request.source,
@@ -52,6 +53,7 @@ async def add_knowledge(
             tags=request.tags
         )
         
+        # Retornar objeto completo (compatível com frontend)
         return knowledge
     
     except Exception as e:
@@ -64,24 +66,25 @@ async def add_knowledge(
 
 @router.get("/")
 async def list_knowledge(
-    organization_id: int = Query(..., description="ID da organização"),
     category: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Listar conhecimentos da organização (endpoint público)
+    Listar conhecimentos da organização
     """
     try:
         knowledges = await rag_service.list_knowledge(
             db=db,
-            organization_id=organization_id,
+            organization_id=current_user.organization_id,
             category=category,
             limit=limit,
             offset=offset
         )
         
+        # Retornar array diretamente (compatível com frontend)
         return knowledges
     
     except Exception as e:
@@ -92,22 +95,21 @@ async def list_knowledge(
         )
 
 
-@router.get("/search")
+@router.post("/search")
 async def search_knowledge(
-    organization_id: int = Query(..., description="ID da organização"),
-    query: str = Query(..., description="Texto da busca"),
-    k: int = Query(3, description="Número de resultados"),
+    request: SearchKnowledgeRequest,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Buscar conhecimento relevante (endpoint público com GET)
+    Buscar conhecimento relevante
     """
     try:
         results = await rag_service.search_knowledge(
             db=db,
-            organization_id=organization_id,
-            query=query,
-            k=k
+            organization_id=current_user.organization_id,
+            query=request.query,
+            k=request.k
         )
         
         return {
@@ -126,10 +128,11 @@ async def search_knowledge(
 @router.post("/rag")
 async def rag_query(
     request: RAGQueryRequest,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Fazer pergunta usando RAG (endpoint público)
+    Fazer pergunta usando RAG (Retrieval-Augmented Generation)
     """
     try:
         from config import settings
@@ -138,7 +141,7 @@ async def rag_query(
         
         result = await rag_service.generate_with_context(
             db=db,
-            organization_id=request.organization_id,
+            organization_id=current_user.organization_id,
             query=request.query,
             system_prompt=system_prompt
         )
@@ -156,17 +159,17 @@ async def rag_query(
 @router.delete("/{knowledge_id}")
 async def delete_knowledge(
     knowledge_id: int,
-    organization_id: int = Query(..., description="ID da organização"),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Deletar conhecimento (endpoint público)
+    Deletar conhecimento
     """
     try:
         success = await rag_service.delete_knowledge(
             db=db,
             knowledge_id=knowledge_id,
-            organization_id=organization_id
+            organization_id=current_user.organization_id
         )
         
         if not success:
@@ -192,11 +195,11 @@ async def delete_knowledge(
 
 @router.get("/stats")
 async def get_stats(
-    organization_id: int = Query(..., description="ID da organização"),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Obter estatísticas da base de conhecimento (endpoint público)
+    Obter estatísticas da base de conhecimento
     """
     try:
         from services import vector_store_service
@@ -209,7 +212,7 @@ async def get_stats(
         # Stats do banco de dados
         result = await db.execute(
             select(func.count(KnowledgeBase.id)).where(
-                KnowledgeBase.organization_id == organization_id,
+                KnowledgeBase.organization_id == current_user.organization_id,
                 KnowledgeBase.is_active == True
             )
         )
@@ -230,7 +233,7 @@ async def get_stats(
 
 @router.get("/count")
 async def get_count(
-    organization_id: int = Query(..., description="ID da organização"),
+    organization_id: int,
     db: AsyncSession = Depends(get_db)
 ):
     """
