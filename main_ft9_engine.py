@@ -18,7 +18,7 @@ from session_manager import session_manager
 from engine import FT9Core, FT9Flow, FT9Memory, WhatsAppGateway
 
 # Importar Routers
-from routers import funnel, dashboard
+from routers import funnel, dashboard, knowledge_router_v2
 
 # Configure logging
 logging.basicConfig(
@@ -45,6 +45,7 @@ app = FastAPI(
 # Include routers
 app.include_router(funnel.router, prefix="/funnel", tags=["funnel"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+app.include_router(knowledge_router_v2.router, prefix="/api/v1/knowledge", tags=["knowledge"])
 
 
 # Pydantic models for request validation
