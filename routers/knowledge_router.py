@@ -56,35 +56,52 @@ async def count_knowledge(
     return {"count": q.scalar()}
 
 # -----------------------------------------------------
-# 3) SEARCH — busca por similaridade (pgvector)
+# 3) SEARCH — busca por similaridade (fallback sem pgvector)
 # -----------------------------------------------------
 @router.get("/search", response_model=list[KnowledgeOut])
 async def search_knowledge(
     query: str,
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session)
 ):
+    import json
+    import numpy as np
+    
     query_emb = await generate_embedding(query)
     
-    stmt = sa.text("""
-        SELECT id, title, category, content, created_at,
-               1 - (embedding <=> :query_emb) AS score
-        FROM knowledge
-        ORDER BY embedding <=> :query_emb
-        LIMIT 5;
-    """)
+    # Buscar todos os documentos da organização
+    stmt = select(Knowledge).where(Knowledge.organization_id == current_user.organization_id)
+    result = await session.execute(stmt)
+    docs = result.scalars().all()
     
-    result = await session.execute(stmt, {"query_emb": query_emb})
-    rows = result.fetchall()
+    if not docs:
+        return []
+    
+    # Calcular similaridade de cosseno em Python
+    def cosine_similarity(a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    
+    scored_docs = []
+    for doc in docs:
+        if doc.embedding:
+            # Converter JSON string para lista
+            doc_emb = json.loads(doc.embedding) if isinstance(doc.embedding, str) else doc.embedding
+            score = cosine_similarity(query_emb, doc_emb)
+            scored_docs.append((doc, score))
+    
+    # Ordenar por score (maior primeiro) e pegar top 5
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    top_docs = [doc for doc, score in scored_docs[:5]]
     
     return [
         KnowledgeOut(
-            id=r.id,
-            title=r.title,
-            category=r.category,
-            content=r.content,
-            created_at=r.created_at
+            id=doc.id,
+            title=doc.title,
+            category=doc.category,
+            content=doc.content,
+            created_at=doc.created_at
         )
-        for r in rows
+        for doc in top_docs
     ]
 
 # -----------------------------------------------------
