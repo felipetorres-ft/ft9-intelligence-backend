@@ -2,6 +2,7 @@
 Serviço de Billing e Pagamentos com Stripe
 """
 import stripe
+import asyncio
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,7 +55,7 @@ class BillingService:
                     "default_payment_method": payment_method_id
                 }
             
-            customer = stripe.Customer.create(**customer_data)
+            customer = await asyncio.to_thread(stripe.Customer.create, **customer_data)
             
             logger.info(f"Cliente Stripe criado: {customer.id} para org {organization.id}")
             
@@ -107,7 +108,7 @@ class BillingService:
             if payment_method_id:
                 subscription_data["default_payment_method"] = payment_method_id
             
-            subscription = stripe.Subscription.create(**subscription_data)
+            subscription = await asyncio.to_thread(stripe.Subscription.create, **subscription_data)
             
             # Atualizar organização
             organization.stripe_subscription_id = subscription.id
