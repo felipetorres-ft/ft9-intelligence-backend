@@ -22,7 +22,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/whatsapp", tags=["WhatsApp"])
 
 # Initialize OpenAI client for GPT-5
-openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+# Will be initialized on first use to avoid startup errors
+openai_client = None
+
+def get_openai_client():
+    global openai_client
+    if openai_client is None:
+        openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
+    return openai_client
 
 
 class WhatsAppService:
@@ -138,7 +145,8 @@ Diretrizes:
     
     # Call GPT-5
     try:
-        response = await openai_client.chat.completions.create(
+        client = get_openai_client()
+        response = await client.chat.completions.create(
             model="gpt-4o",  # GPT-5 model (using gpt-4o as GPT-5 alias)
             messages=messages,
             temperature=0.7,
