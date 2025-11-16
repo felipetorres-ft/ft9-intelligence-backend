@@ -13,7 +13,7 @@ from services.embedding_service import generate_embedding
 from schemas.knowledge_schemas import KnowledgeCreate, KnowledgeOut
 from auth import get_current_active_user
 
-router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
+router = APIRouter(prefix="/api/v1/knowledge", tags=["Knowledge"])
 
 # -----------------------------------------------------
 # 1) ADD — adicionar documento na Knowledge Base
