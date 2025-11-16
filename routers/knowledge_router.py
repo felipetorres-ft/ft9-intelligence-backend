@@ -56,6 +56,30 @@ async def count_knowledge(
     return {"count": q.scalar()}
 
 # -----------------------------------------------------
+# 2.1) LIST ALL (DEBUG) — listar todos os documentos
+# -----------------------------------------------------
+@router.get("/list-all")
+async def list_all_knowledge(
+    session: AsyncSession = Depends(get_async_session)
+):
+    result = await session.execute(select(Knowledge))
+    docs = result.scalars().all()
+    
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "category": doc.category,
+            "organization_id": doc.organization_id,
+            "content_preview": doc.content[:200] if doc.content else None,
+            "has_embedding": doc.embedding is not None,
+            "embedding_type": str(type(doc.embedding)),
+            "created_at": doc.created_at
+        }
+        for doc in docs
+    ]
+
+# -----------------------------------------------------
 # 3) SEARCH — busca por similaridade (fallback sem pgvector)
 # -----------------------------------------------------
 @router.get("/search", response_model=list[KnowledgeOut])
