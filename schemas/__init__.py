@@ -37,4 +37,22 @@ class Organization(OrganizationBase):
     class Config:
         orm_mode = True
 
-__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "OrganizationUpdate", "Organization"]
+class OrganizationResponse(Organization):
+    """Alias para OrganizationResponse"""
+    pass
+
+# User schemas
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
+    role: Optional[str] = None
+
+class UserResponse(UserBase):
+    id: int
+    organization_id: int
+    is_active: bool = True
+
+    class Config:
+        orm_mode = True
+
+__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "OrganizationUpdate", "Organization", "OrganizationResponse", "UserBase", "UserResponse"]
