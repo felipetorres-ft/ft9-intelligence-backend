@@ -93,6 +93,61 @@ async def list_all_knowledge(
     ]
 
 # -----------------------------------------------------
+# 2.2) SEARCH INTERNAL — função interna para uso por outros routers
+# -----------------------------------------------------
+async def search_knowledge_internal(
+    query: str,
+    organization_id: int,
+    session: AsyncSession,
+    top_k: int = 5
+) -> list:
+    """
+    Internal function to search knowledge base
+    Used by other routers (e.g., WhatsApp)
+    
+    Returns:
+        List of dicts with title, content, score
+    """
+    import json
+    import numpy as np
+    
+    query_emb = await generate_embedding(query)
+    
+    # Buscar todos os documentos da organização
+    stmt = select(Knowledge).where(Knowledge.organization_id == organization_id)
+    result = await session.execute(stmt)
+    docs = result.scalars().all()
+    
+    if not docs:
+        return []
+    
+    # Calcular similaridade de cosseno em Python
+    def cosine_similarity(a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    
+    scored_docs = []
+    for doc in docs:
+        if doc.embedding:
+            # Converter JSON string para lista
+            doc_emb = json.loads(doc.embedding) if isinstance(doc.embedding, str) else doc.embedding
+            score = cosine_similarity(query_emb, doc_emb)
+            scored_docs.append((doc, score))
+    
+    # Ordenar por score (maior primeiro) e pegar top_k
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    top_docs = scored_docs[:top_k]
+    
+    return [
+        {
+            "title": doc.title,
+            "content": doc.content,
+            "category": doc.category,
+            "score": float(score)
+        }
+        for doc, score in top_docs
+    ]
+
+# -----------------------------------------------------
 # 3) SEARCH — busca por similaridade (fallback sem pgvector)
 # -----------------------------------------------------
 @router.get("/search", response_model=list[KnowledgeOut])
