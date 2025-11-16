@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 # necessário para tratar schemas como package
@@ -17,29 +17,34 @@ class LoginRequest(BaseModel):
 
 # Organization schemas
 class OrganizationBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    type: Optional[str] = None
-    cnpj: Optional[str] = None
-    address: Optional[str] = None
+    name: str = Field(..., min_length=3, max_length=255)
+    email: EmailStr
     phone: Optional[str] = None
-    website: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
 
 class OrganizationCreate(OrganizationBase):
-    pass
+    # Admin user data
+    admin_email: EmailStr
+    admin_password: str = Field(..., min_length=8)
+    admin_full_name: str = Field(..., min_length=3)
 
-class OrganizationUpdate(OrganizationBase):
-    pass
+class OrganizationUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    whatsapp_phone_number: Optional[str] = None
 
-class Organization(OrganizationBase):
+class OrganizationResponse(OrganizationBase):
     id: int
+    slug: str
 
     class Config:
-        orm_mode = True
-
-class OrganizationResponse(Organization):
-    """Alias para OrganizationResponse"""
-    pass
+        from_attributes = True  # Updated from orm_mode
 
 # User schemas
 class UserBase(BaseModel):
@@ -53,6 +58,6 @@ class UserResponse(UserBase):
     is_active: bool = True
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Updated from orm_mode
 
-__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "OrganizationUpdate", "Organization", "OrganizationResponse", "UserBase", "UserResponse"]
+__all__ = ["Token", "TokenData", "LoginRequest", "OrganizationBase", "OrganizationCreate", "OrganizationUpdate", "OrganizationResponse", "UserBase", "UserResponse"]
