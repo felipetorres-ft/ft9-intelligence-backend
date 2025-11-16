@@ -48,7 +48,7 @@ async def add_knowledge(
 # -----------------------------------------------------
 # 1.1) LIST — listar documentos da organização
 # -----------------------------------------------------
-@router.get("/", response_model=list[KnowledgeOut])
+@router.get("/list", response_model=list[KnowledgeOut])
 async def list_knowledge(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session)
