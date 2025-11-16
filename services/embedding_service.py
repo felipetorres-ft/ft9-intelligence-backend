@@ -74,5 +74,5 @@ embedding_service = EmbeddingService()
 
 
 # Função auxiliar de compatibilidade
-def generate_embedding(text: str):
+async def generate_embedding(text: str):
     return embedding_service.generate_embedding(text)
