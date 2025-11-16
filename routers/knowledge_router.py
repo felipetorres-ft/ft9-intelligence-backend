@@ -134,10 +134,40 @@ async def search_knowledge(
 @router.post("/rag")
 async def ask_rag(
     question: str,
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session)
 ):
-    # 1) Buscar contexto
-    context_docs = await search_knowledge(question, session)
+    import json
+    import numpy as np
+    
+    # 1) Buscar contexto (inline para evitar dependência circular)
+    query_emb = await generate_embedding(question)
+    
+    # Buscar todos os documentos da organização
+    stmt = select(Knowledge).where(Knowledge.organization_id == current_user.organization_id)
+    result = await session.execute(stmt)
+    docs = result.scalars().all()
+    
+    if not docs:
+        raise HTTPException(404, "Nenhum documento encontrado na base de conhecimento.")
+    
+    # Calcular similaridade de cosseno
+    def cosine_similarity(a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    
+    scored_docs = []
+    for doc in docs:
+        if doc.embedding:
+            doc_emb = json.loads(doc.embedding) if isinstance(doc.embedding, str) else doc.embedding
+            score = cosine_similarity(query_emb, doc_emb)
+            scored_docs.append((doc, score))
+    
+    if not scored_docs:
+        raise HTTPException(404, "Nenhum documento com embedding encontrado.")
+    
+    # Ordenar por score e pegar top 3 para RAG
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    context_docs = [doc for doc, score in scored_docs[:3]]
     
     if not context_docs:
         raise HTTPException(404, "Nenhum documento encontrado para RAG.")
