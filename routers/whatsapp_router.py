@@ -186,7 +186,7 @@ async def get_or_create_conversation(
         organization_id=organization_id,
         customer_phone=customer_phone,
         customer_name=customer_name or customer_phone,
-        status="active",
+        is_active=True,
         started_at=datetime.utcnow()
     )
     session.add(conversation)
