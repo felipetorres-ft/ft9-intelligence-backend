@@ -39,48 +39,14 @@ async def create_subscription(
 ):
     """
     Criar assinatura para a organização (apenas admin)
-    """
-    try:
-        # Buscar organização
-        from sqlalchemy import select
-        result = await db.execute(
-            select(Organization).where(Organization.id == current_user.organization_id)
-        )
-        organization = result.scalar_one_or_none()
-        
-        if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Organização não encontrada"
-            )
-        
-        # Verificar se já possui assinatura
-        if organization.stripe_subscription_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Organização já possui assinatura ativa"
-            )
-        
-        # Criar assinatura
-        subscription_data = await billing_service.create_subscription(
-            db=db,
-            organization=organization,
-            plan=request.plan,
-            payment_method_id=request.payment_method_id,
-            trial_days=request.trial_days
-        )
-        
-        return {
-            "success": True,
-            "subscription": subscription_data
-        }
     
-    except Exception as e:
-        logger.error(f"Erro ao criar assinatura: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+    **TEMPORARIAMENTE DESATIVADO** - Funcionalidade em construção.
+    Aguardando configuração completa da integração de pagamentos.
+    """
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Funcionalidade de assinaturas temporariamente indisponível. Em breve estará disponível."
+    )
 
 
 @router.patch("/subscription")
@@ -91,39 +57,14 @@ async def update_subscription(
 ):
     """
     Atualizar plano da assinatura (upgrade/downgrade)
-    """
-    try:
-        # Buscar organização
-        from sqlalchemy import select
-        result = await db.execute(
-            select(Organization).where(Organization.id == current_user.organization_id)
-        )
-        organization = result.scalar_one_or_none()
-        
-        if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Organização não encontrada"
-            )
-        
-        # Atualizar assinatura
-        subscription_data = await billing_service.update_subscription(
-            db=db,
-            organization=organization,
-            new_plan=request.new_plan
-        )
-        
-        return {
-            "success": True,
-            "subscription": subscription_data
-        }
     
-    except Exception as e:
-        logger.error(f"Erro ao atualizar assinatura: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+    **TEMPORARIAMENTE DESATIVADO** - Funcionalidade em construção.
+    Aguardando configuração completa da integração de pagamentos.
+    """
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Funcionalidade de assinaturas temporariamente indisponível. Em breve estará disponível."
+    )
 
 
 @router.delete("/subscription")
@@ -134,39 +75,14 @@ async def cancel_subscription(
 ):
     """
     Cancelar assinatura
-    """
-    try:
-        # Buscar organização
-        from sqlalchemy import select
-        result = await db.execute(
-            select(Organization).where(Organization.id == current_user.organization_id)
-        )
-        organization = result.scalar_one_or_none()
-        
-        if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Organização não encontrada"
-            )
-        
-        # Cancelar assinatura
-        subscription_data = await billing_service.cancel_subscription(
-            db=db,
-            organization=organization,
-            at_period_end=request.at_period_end
-        )
-        
-        return {
-            "success": True,
-            "subscription": subscription_data
-        }
     
-    except Exception as e:
-        logger.error(f"Erro ao cancelar assinatura: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+    **TEMPORARIAMENTE DESATIVADO** - Funcionalidade em construção.
+    Aguardando configuração completa da integração de pagamentos.
+    """
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Funcionalidade de assinaturas temporariamente indisponível. Em breve estará disponível."
+    )
 
 
 @router.get("/portal")
@@ -177,37 +93,14 @@ async def get_portal_url(
 ):
     """
     Obter URL do portal do cliente Stripe
-    """
-    try:
-        # Buscar organização
-        from sqlalchemy import select
-        result = await db.execute(
-            select(Organization).where(Organization.id == current_user.organization_id)
-        )
-        organization = result.scalar_one_or_none()
-        
-        if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Organização não encontrada"
-            )
-        
-        # Criar portal session
-        portal_url = await billing_service.create_portal_session(
-            organization=organization,
-            return_url=return_url
-        )
-        
-        return {
-            "url": portal_url
-        }
     
-    except Exception as e:
-        logger.error(f"Erro ao criar portal session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+    **TEMPORARIAMENTE DESATIVADO** - Funcionalidade em construção.
+    Aguardando configuração completa da integração de pagamentos.
+    """
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Funcionalidade de portal de assinaturas temporariamente indisponível. Em breve estará disponível."
+    )
 
 
 @router.post("/webhook")
