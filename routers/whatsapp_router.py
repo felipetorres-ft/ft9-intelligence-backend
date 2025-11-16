@@ -173,7 +173,7 @@ async def get_or_create_conversation(
         select(Conversation).where(
             Conversation.organization_id == organization_id,
             Conversation.customer_phone == customer_phone,
-            Conversation.status == "active"
+            Conversation.is_active == True
         )
     )
     conversation = result.scalar_one_or_none()
