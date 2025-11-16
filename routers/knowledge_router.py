@@ -7,10 +7,11 @@ from sqlalchemy.future import select
 import sqlalchemy as sa
 import openai
 
-from database import get_async_session
+from database import get_async_session, User
 from models.knowledge import Knowledge
 from services.embedding_service import generate_embedding
 from schemas.knowledge_schemas import KnowledgeCreate, KnowledgeOut
+from auth import get_current_active_user
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
 
@@ -20,6 +21,7 @@ router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
 @router.post("/", response_model=KnowledgeOut)
 async def add_knowledge(
     payload: KnowledgeCreate,
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session)
 ):
     # Gerar embedding
@@ -34,7 +36,7 @@ async def add_knowledge(
         category=payload.category,
         content=payload.content,
         embedding=embedding_json,
-        organization_id=1  # Ajustar se houver multi-tenant real
+        organization_id=current_user.organization_id
     )
     
     session.add(new_doc)
