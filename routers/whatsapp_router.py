@@ -147,7 +147,7 @@ Diretrizes:
     try:
         client = get_openai_client()
         response = await client.chat.completions.create(
-            model="gpt-4.1-mini",  # GPT-4.1 Mini model configured in environment
+            model="gpt-5.1",  # GPT-5.1 - Latest and most capable OpenAI model
             messages=messages,
             temperature=0.7,
             max_tokens=500
