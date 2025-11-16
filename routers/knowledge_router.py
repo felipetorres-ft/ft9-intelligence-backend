@@ -25,11 +25,15 @@ async def add_knowledge(
     # Gerar embedding
     embedding = await generate_embedding(payload.content)
     
+    # Converter embedding para JSON string
+    import json
+    embedding_json = json.dumps(embedding) if embedding else None
+    
     new_doc = Knowledge(
         title=payload.title,
         category=payload.category,
         content=payload.content,
-        embedding=embedding,
+        embedding=embedding_json,
         organization_id=1  # Ajustar se houver multi-tenant real
     )
     
