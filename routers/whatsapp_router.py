@@ -323,7 +323,7 @@ async def process_incoming_message(
             content=message_text,
             is_from_customer=True,
             whatsapp_message_id=message_id,
-            created_at=datetime.utcnow()
+            sent_at=datetime.utcnow()
         )
         session.add(incoming_message)
         await session.commit()
@@ -353,7 +353,7 @@ async def process_incoming_message(
             conversation_id=conversation.id,
             content=ai_response,
             is_from_customer=False,
-            created_at=datetime.utcnow()
+            sent_at=datetime.utcnow()
         )
         session.add(outgoing_message)
         await session.commit()
