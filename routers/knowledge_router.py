@@ -189,11 +189,14 @@ Resposta:
 """
     
     # 3) Chamar OpenAI
-    resp = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
+    from openai import OpenAI
+    client = OpenAI()  # API key vem de OPENAI_API_KEY env var
+    
+    resp = client.chat.completions.create(
+        model="gpt-4.1-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
         max_tokens=400
     )
     
-    return {"answer": resp.choices[0].message["content"]}
+    return {"answer": resp.choices[0].message.content}
