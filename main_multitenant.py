@@ -11,6 +11,7 @@ from config import settings
 from database import init_db
 from routers import auth_router, organization_router, billing_router, knowledge_router, automation_router, whatsapp_router
 from routers.temp_update_org import router as temp_update_router
+from routers.admin_router import router as admin_router
 
 # Configurar logging
 logging.basicConfig(
@@ -70,6 +71,7 @@ app.include_router(knowledge_router)
 app.include_router(automation_router)
 app.include_router(whatsapp_router)
 app.include_router(temp_update_router)
+app.include_router(admin_router)
 
 
 @app.get("/")
