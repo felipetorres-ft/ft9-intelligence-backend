@@ -206,7 +206,7 @@ async def get_conversation_history(
     result = await session.execute(
         select(Message)
         .where(Message.conversation_id == conversation_id)
-        .order_by(Message.created_at.desc())
+        .order_by(Message.sent_at.desc())
         .limit(limit)
     )
     messages = result.scalars().all()
@@ -215,7 +215,7 @@ async def get_conversation_history(
         {
             "content": msg.content,
             "is_from_customer": msg.is_from_customer,
-            "created_at": msg.created_at
+            "created_at": msg.sent_at
         }
         for msg in reversed(messages)
     ]
@@ -496,7 +496,7 @@ async def get_messages(
         result = await session.execute(
             select(Message)
             .where(Message.conversation_id == conversation_id)
-            .order_by(Message.created_at.asc())
+            .order_by(Message.sent_at.asc())
             .limit(limit)
         )
         messages = result.scalars().all()
@@ -506,9 +506,7 @@ async def get_messages(
                 {
                     "id": msg.id,
                     "content": msg.content,
-                    "is_from_customer": msg.is_from_customer,
-                    "created_at": msg.created_at.isoformat() if msg.created_at else None
-                }
+                    "is_from_customer": msg.is_from_customer,                    "created_at": msg.sent_at.isoformat() if msg.sent_at else None               }
                 for msg in messages
             ]
         }
