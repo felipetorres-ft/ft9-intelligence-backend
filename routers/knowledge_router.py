@@ -46,6 +46,19 @@ async def add_knowledge(
     return new_doc
 
 # -----------------------------------------------------
+# 1.1) LIST — listar documentos da organização
+# -----------------------------------------------------
+@router.get("/", response_model=list[KnowledgeOut])
+async def list_knowledge(
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    stmt = select(Knowledge).where(Knowledge.organization_id == current_user.organization_id)
+    result = await session.execute(stmt)
+    docs = result.scalars().all()
+    return docs
+
+# -----------------------------------------------------
 # 2) COUNT — contar documentos
 # -----------------------------------------------------
 @router.get("/count")
