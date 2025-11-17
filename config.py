@@ -31,6 +31,11 @@ class Settings:
         self.whatsapp_verify_token = os.getenv('WEBHOOK_VERIFY_TOKEN', 'ft9_secure_webhook_token_2025')
         self.whatsapp_api_url = os.getenv('WHATSAPP_API_URL', 'https://graph.facebook.com/v18.0')
         
+        # Z-API Configuration
+        self.zapi_instance_id = os.getenv('ZAPI_INSTANCE_ID', '3EA61512E6CBA19EB3A9E243A9EE21C6')
+        self.zapi_token = os.getenv('ZAPI_TOKEN', '212CBB5256257083A240A4EC')
+        self.zapi_base_url = os.getenv('ZAPI_BASE_URL', 'https://api.z-api.io')
+        
         # OpenAI
         self.openai_api_key = os.getenv('OPENAI_API_KEY', '')
         self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
@@ -146,6 +151,18 @@ Seja profissional, empático e objetivo. Sempre busque entender o contexto antes
     @property
     def FT9_SYSTEM_PROMPT(self):
         return self.ft9_system_prompt
+    
+    @property
+    def ZAPI_INSTANCE_ID(self):
+        return self.zapi_instance_id
+    
+    @property
+    def ZAPI_TOKEN(self):
+        return self.zapi_token
+    
+    @property
+    def ZAPI_BASE_URL(self):
+        return self.zapi_base_url
 
 
 # Global settings instance
