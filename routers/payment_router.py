@@ -12,7 +12,7 @@ import httpx
 import os
 import logging
 
-from database.db import get_db
+from database.database import get_db
 from services.payment_service import (
     save_payment,
     update_payment_status,
