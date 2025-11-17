@@ -150,7 +150,7 @@ Diretrizes:
             model="gpt-5.1",  # GPT-5.1 - Latest and most capable OpenAI model
             messages=messages,
             temperature=0.7,
-            max_completion_tokens=500
+            max_tokens=500
         )
         
         return response.choices[0].message.content

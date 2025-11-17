@@ -262,7 +262,7 @@ Se houver dúvidas, esclareça e ofereça ajuda."""
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": mensagem}
                 ],
-                "max_completion_tokens": 500,
+                "max_tokens": 500,
                 "temperature": 0.7
             }
             
