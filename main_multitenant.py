@@ -13,6 +13,8 @@ from routers import auth_router, organization_router, billing_router, knowledge_
 from routers.temp_update_org import router as temp_update_router
 from routers.admin_router import router as admin_router
 from routers.payment_router import router as payment_router
+from routers.broadcast_router import router as broadcast_router
+from routers.zapi_webhook_router import router as zapi_webhook_router
 
 # Configurar logging
 logging.basicConfig(
@@ -74,6 +76,8 @@ app.include_router(whatsapp_router)
 app.include_router(temp_update_router)
 app.include_router(admin_router)
 app.include_router(payment_router)
+app.include_router(broadcast_router)
+app.include_router(zapi_webhook_router)
 
 
 @app.get("/")
