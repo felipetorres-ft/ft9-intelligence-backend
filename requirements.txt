@@ -20,3 +20,4 @@ numpy==1.26.4
 requests==2.31.0
 email-validator==2.0.0.post2
 python-multipart==0.0.9
+mercadopago==2.2.1
