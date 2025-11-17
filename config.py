@@ -26,7 +26,7 @@ class Settings:
     
     def __init__(self):
         # WhatsApp Business API
-        self.whatsapp_api_token = os.getenv('WHATSAPP_API_TOKEN') or os.getenv('WHATSAPP_ACCESS_TOKEN', '')
+        self.whatsapp_api_token = (os.getenv('WHATSAPP_API_TOKEN') or os.getenv('WHATSAPP_ACCESS_TOKEN', '')).strip()
         self.whatsapp_phone_number_id = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
         self.whatsapp_verify_token = os.getenv('WEBHOOK_VERIFY_TOKEN', 'ft9_secure_webhook_token_2025')
         self.whatsapp_api_url = os.getenv('WHATSAPP_API_URL', 'https://graph.facebook.com/v18.0')
