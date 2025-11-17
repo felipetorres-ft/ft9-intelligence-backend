@@ -32,7 +32,7 @@ class CreatePaymentRequest(BaseModel):
     title: str
     description: Optional[str] = None
     user_id: Optional[str] = None
-    metadata: Optional[dict] = None
+    payment_metadata: Optional[dict] = None
 
 
 class PaymentResponse(BaseModel):
@@ -87,7 +87,7 @@ async def create_payment(
             "status": "pending",
             "amount": payment_data.amount,
             "user_id": payment_data.user_id,
-            "metadata": payment_data.metadata or {}
+            "payment_metadata": payment_data.payment_metadata or {}
         }
         
         payment = await save_payment(session, payment_db_data)
