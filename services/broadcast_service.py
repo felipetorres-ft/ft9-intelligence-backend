@@ -13,31 +13,44 @@ from config import settings
 LOTE_TAMANHO = 50
 INTERVALO_ENTRE_LOTES = 8  # segundos
 
-TEMPLATE_ID = "revisao_de_contrato_2025"  # ajustar se o nome for outro
+# Mensagem padrão do broadcast
+MENSAGEM_TEMPLATE = """Olá {nome}! 👋
+
+Aqui é da equipe {clinica}.
+
+Estamos entrando em contato para oferecer uma oportunidade especial de revisão e otimização para 2025.
+
+🎯 *O que podemos fazer por você:*
+• Análise completa da sua situação atual
+• Identificação de oportunidades de crescimento
+• Planejamento estratégico para 2025
+
+📅 *Que tal agendar uma conversa?*
+
+Responda esta mensagem e vamos encontrar o melhor horário para você!
+
+Equipe {clinica} 🚀"""
 
 
 async def enviar_mensagem_template(client: httpx.AsyncClient, numero: str, nome: str, clinica: str):
-    url = f"{settings.ZAPI_BASE_URL}/instances/{settings.ZAPI_INSTANCE_ID}/token/{settings.ZAPI_TOKEN}/send-template"
+    url = f"{settings.ZAPI_BASE_URL}/instances/{settings.ZAPI_INSTANCE_ID}/token/{settings.ZAPI_TOKEN}/send-text"
+
+    # Substituir variáveis na mensagem
+    mensagem = MENSAGEM_TEMPLATE.format(nome=nome, clinica=clinica)
 
     payload = {
         "phone": numero,
-        "templateId": TEMPLATE_ID,
-        "variables": {
-            "nome": nome,
-            "clinica": clinica
-        },
-        "buttons": [
-            {"id": "btn_agendar", "title": "Agendar reunião"},
-            {"id": "btn_info", "title": "Quero mais informações"},
-            {"id": "btn_parar", "title": "Não tenho interesse"}
-        ]
+        "message": mensagem
     }
 
     try:
-        resp = await client.post(url, json=payload, timeout=20)
+        resp = await client.post(url, json=payload, timeout=30)
         logger.info(f"[BROADCAST] Enviado para {numero} | Status: {resp.status_code} | Resp: {resp.text}")
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        logger.error(f"[BROADCAST] Erro HTTP ao enviar para {numero}: {e}")
     except Exception as e:
-        logger.error(f"[BROADCAST] Erro ao enviar para {numero}: {e}")
+        logger.error(f"[BROADCAST] Erro inesperado ao enviar para {numero}: {e}")
 
 
 async def process_csv_and_broadcast(csv_content: bytes):
