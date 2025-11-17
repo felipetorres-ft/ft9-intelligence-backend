@@ -5,7 +5,9 @@ import io
 import asyncio
 import httpx
 
-from utils.logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_BASE_URL
 
 LOTE_TAMANHO = 50
