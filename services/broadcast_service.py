@@ -8,7 +8,7 @@ import httpx
 import logging
 
 logger = logging.getLogger(__name__)
-from config import ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_BASE_URL
+from config import settings
 
 LOTE_TAMANHO = 50
 INTERVALO_ENTRE_LOTES = 8  # segundos
@@ -17,7 +17,7 @@ TEMPLATE_ID = "revisao_de_contrato_2025"  # ajustar se o nome for outro
 
 
 async def enviar_mensagem_template(client: httpx.AsyncClient, numero: str, nome: str, clinica: str):
-    url = f"{ZAPI_BASE_URL}/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_TOKEN}/send-template"
+    url = f"{settings.ZAPI_BASE_URL}/instances/{settings.ZAPI_INSTANCE_ID}/token/{settings.ZAPI_TOKEN}/send-template"
 
     payload = {
         "phone": numero,
