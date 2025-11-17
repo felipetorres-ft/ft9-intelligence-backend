@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.broadcast_service import process_csv_and_broadcast
 from schemas.broadcast_schema import BroadcastResponse
 from database.database import get_db
-from auth.dependencies import get_current_active_user
+from auth.security import get_current_active_user
 from models.user import User
 
 router = APIRouter(prefix="/broadcast", tags=["Broadcast"])
