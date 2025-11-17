@@ -1,127 +1,105 @@
-"""
-FT9 Intelligence - Broadcast Service
-Serviço principal para disparo massivo via Z-API com anti-banimento
-"""
+# services/broadcast_service.py
 
 import csv
 import io
-import time
 import asyncio
-from fastapi import UploadFile
-import logging
+import httpx
 
-from services.zapi_send_service import enviar_template
+from utils.logger import logger
+from config import ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_BASE_URL
 
-logger = logging.getLogger(__name__)
+LOTE_TAMANHO = 50
+INTERVALO_ENTRE_LOTES = 8  # segundos
 
-# Configurações de segurança anti-banimento
-LOTE_TAMANHO = 50  # Mensagens por lote
-INTERVALO_ENTRE_LOTES = 8  # Segundos entre lotes (ideal: 6-12s)
-LIMITE_DIARIO = 500  # Limite de mensagens por dia
-
-# Template padrão (deve ser criado na Meta)
-TEMPLATE_ID = "revisao_de_contrato_2025"
+TEMPLATE_ID = "revisao_de_contrato_2025"  # ajustar se o nome for outro
 
 
-async def enviar_mensagem(numero: str, nome: str, clinica: str) -> dict:
-    """
-    Envia mensagem individual com template
-    
-    Args:
-        numero: Número WhatsApp com DDI+DDD
-        nome: Nome do contato
-        clinica: Nome da clínica
-        
-    Returns:
-        dict: Response da Z-API
-    """
-    variables = {
-        "nome": nome,
-        "clinica": clinica
+async def enviar_mensagem_template(client: httpx.AsyncClient, numero: str, nome: str, clinica: str):
+    url = f"{ZAPI_BASE_URL}/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_TOKEN}/send-template"
+
+    payload = {
+        "phone": numero,
+        "templateId": TEMPLATE_ID,
+        "variables": {
+            "nome": nome,
+            "clinica": clinica
+        },
+        "buttons": [
+            {"id": "btn_agendar", "title": "Agendar reunião"},
+            {"id": "btn_info", "title": "Quero mais informações"},
+            {"id": "btn_parar", "title": "Não tenho interesse"}
+        ]
     }
-    
-    buttons = [
-        {"id": "btn_agendar", "title": "Agendar reunião"},
-        {"id": "btn_info", "title": "Quero mais informações"},
-        {"id": "btn_parar", "title": "Não quero receber"}
-    ]
-    
-    result = await enviar_template(numero, TEMPLATE_ID, variables, buttons)
-    logger.info(f"Enviando para {numero} ({nome}): {result}")
-    return result
+
+    try:
+        resp = await client.post(url, json=payload, timeout=20)
+        logger.info(f"[BROADCAST] Enviado para {numero} | Status: {resp.status_code} | Resp: {resp.text}")
+    except Exception as e:
+        logger.error(f"[BROADCAST] Erro ao enviar para {numero}: {e}")
 
 
 async def process_csv_and_broadcast(csv_content: bytes):
     """
-    Processa CSV e executa broadcast em lotes
-    
-    Args:
-        csv_file: Arquivo CSV com colunas: nome, numero, clinica (opcional)
-        
-    CSV Format:
-        nome,numero,clinica
-        João Silva,5511999999999,Clínica ABC
-        Maria Santos,5511988888888,Clínica XYZ
+    Esta função roda em background.
+    Ela NÃO deve travar o endpoint.
     """
+    logger.info("[BROADCAST] Iniciando processamento do CSV")
+
     try:
-        # Decodificar CSV (conteúdo já foi lido)
-        decoded = csv_content.decode('utf-8')
+        decoded = csv_content.decode("utf-8")
         csv_reader = csv.DictReader(io.StringIO(decoded))
 
-        # Extrair contatos
         contatos = []
         for row in csv_reader:
+            numero = (row.get("numero") or "").strip()
+            nome = (row.get("nome") or "").strip()
+            clinica = (row.get("clinica") or "FT9").strip()
+
+            if not numero:
+                logger.warning(f"[BROADCAST] Linha ignorada sem número: {row}")
+                continue
+
             contatos.append({
-                "nome": row.get("nome", ""),
-                "numero": row.get("numero", ""),
-                "clinica": row.get("clinica", "FT9")
+                "numero": numero,
+                "nome": nome or "Cliente",
+                "clinica": clinica
             })
 
         total = len(contatos)
-        logger.info(f"📊 Total de contatos: {total}")
+        if total == 0:
+            logger.warning("[BROADCAST] Nenhum contato válido encontrado no CSV.")
+            return
 
-        # Validar limite diário
-        if total > LIMITE_DIARIO:
-            logger.warning(f"⚠️ Total de contatos ({total}) excede limite diário ({LIMITE_DIARIO})")
-            logger.info(f"Processando apenas os primeiros {LIMITE_DIARIO} contatos")
-            contatos = contatos[:LIMITE_DIARIO]
-            total = LIMITE_DIARIO
+        logger.info(f"[BROADCAST] Total de contatos para envio: {total}")
 
-        # Processar em lotes
-        enviados = 0
-        falhas = 0
-        
-        for i in range(0, total, LOTE_TAMANHO):
-            lote = contatos[i:i + LOTE_TAMANHO]
-            lote_num = (i // LOTE_TAMANHO) + 1
-            total_lotes = (total + LOTE_TAMANHO - 1) // LOTE_TAMANHO
-            
-            logger.info(f"📤 Enviando lote {lote_num}/{total_lotes} com {len(lote)} contatos...")
+        async with httpx.AsyncClient() as client:
+            # Enviar em lotes
+            for i in range(0, total, LOTE_TAMANHO):
+                lote = contatos[i:i + LOTE_TAMANHO]
+                num_lote = (i // LOTE_TAMANHO) + 1
+                logger.info(f"[BROADCAST] Enviando lote {num_lote} com {len(lote)} contatos")
 
-            # Enviar mensagens do lote
-            for contato in lote:
-                try:
-                    await enviar_mensagem(
-                        contato["numero"],
-                        contato["nome"],
-                        contato["clinica"]
+                # Envia um lote em paralelo
+                tasks = []
+                for contato in lote:
+                    tasks.append(
+                        enviar_mensagem_template(
+                            client,
+                            numero=contato["numero"],
+                            nome=contato["nome"],
+                            clinica=contato["clinica"],
+                        )
                     )
-                    enviados += 1
-                except Exception as e:
-                    logger.error(f"❌ Erro ao enviar para {contato['numero']}: {e}")
-                    falhas += 1
-            
-            # Aguardar intervalo anti-spam (exceto no último lote)
-            if i + LOTE_TAMANHO < total:
-                logger.info(f"⏳ Aguardando {INTERVALO_ENTRE_LOTES}s (anti-spam)...")
-                await asyncio.sleep(INTERVALO_ENTRE_LOTES)
 
-        # Relatório final
-        logger.info("=" * 50)
-        logger.info("✅ BROADCAST CONCLUÍDO COM SUCESSO!")
-        logger.info(f"📊 Total: {total} | Enviados: {enviados} | Falhas: {falhas}")
-        logger.info("=" * 50)
+                # Espera todas as mensagens deste lote terminarem
+                await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Se ainda houver mais contatos, espera o intervalo
+                if i + LOTE_TAMANHO < total:
+                    logger.info(f"[BROADCAST] Aguardando {INTERVALO_ENTRE_LOTES}s antes do próximo lote...")
+                    await asyncio.sleep(INTERVALO_ENTRE_LOTES)
+
+        logger.info("[BROADCAST] Processamento concluído com sucesso.")
 
     except Exception as e:
-        logger.error(f"❌ Erro no processamento do broadcast: {e}")
-        raise
+        logger.error(f"[BROADCAST] Erro ao processar broadcast: {e}")
