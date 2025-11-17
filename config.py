@@ -34,6 +34,7 @@ class Settings:
         # Z-API Configuration
         self.zapi_instance_id = os.getenv('ZAPI_INSTANCE_ID', '3EA61512E6CBA19EB3A9E243A9EE21C6')
         self.zapi_token = os.getenv('ZAPI_TOKEN', '212CBB5256257083A240A4EC')
+        self.zapi_client_token = os.getenv('ZAPI_CLIENT_TOKEN', 'Fb455df012da4465e89fe75bfa1e5c1d8S')
         self.zapi_base_url = os.getenv('ZAPI_BASE_URL', 'https://api.z-api.io')
         
         # OpenAI
@@ -159,6 +160,10 @@ Seja profissional, empático e objetivo. Sempre busque entender o contexto antes
     @property
     def ZAPI_TOKEN(self):
         return self.zapi_token
+    
+    @property
+    def ZAPI_CLIENT_TOKEN(self):
+        return self.zapi_client_token
     
     @property
     def ZAPI_BASE_URL(self):
