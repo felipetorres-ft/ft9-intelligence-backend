@@ -15,6 +15,7 @@ from routers.admin_router import router as admin_router
 from routers.payment_router import router as payment_router
 from routers.broadcast_router import router as broadcast_router
 from routers.zapi_webhook_router import router as zapi_webhook_router
+from routers.dev_router import router as dev_router
 
 # Configurar logging
 logging.basicConfig(
@@ -78,6 +79,7 @@ app.include_router(admin_router)
 app.include_router(payment_router)
 app.include_router(broadcast_router)
 app.include_router(zapi_webhook_router)
+app.include_router(dev_router)
 
 
 @app.get("/")
