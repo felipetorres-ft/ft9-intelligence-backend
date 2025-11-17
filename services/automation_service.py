@@ -360,7 +360,7 @@ class AutomationService:
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=500
+            max_completion_tokens=500
         )
         
         answer = response.choices[0].message.content

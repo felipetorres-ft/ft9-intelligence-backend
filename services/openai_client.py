@@ -33,7 +33,7 @@ class OpenAIClient:
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
+                max_completion_tokens=400,
                 temperature=0.2
             )
             return response["choices"][0]["message"]["content"]

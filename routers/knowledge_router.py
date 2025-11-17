@@ -264,7 +264,7 @@ Resposta:
         model="gpt-4.1-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
-        max_tokens=400
+        max_completion_tokens=400
     )
     
     return {"answer": resp.choices[0].message.content}
