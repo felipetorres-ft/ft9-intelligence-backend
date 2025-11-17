@@ -176,7 +176,7 @@ Seja profissional, empático e objetivo. Responda em português brasileiro."""
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=500
+                max_completion_tokens=500
             )
             
             ai_response = response.choices[0].message.content
@@ -215,7 +215,7 @@ Responda em formato JSON."""
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
-                max_tokens=200
+                max_completion_tokens=200
             )
             
             # Parse response (simplified - in production, use proper JSON parsing)

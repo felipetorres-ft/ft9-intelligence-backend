@@ -337,7 +337,7 @@ Seja claro, objetivo e educativo."""
                 {"role": "system", "content": "Você é um assistente educacional que responde perguntas baseado em documentos fornecidos."},
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 500,
+            "max_completion_tokens": 500,
             "temperature": 0.2
         }
         

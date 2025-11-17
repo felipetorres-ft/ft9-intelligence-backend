@@ -15,7 +15,7 @@ async def update_whatsapp_organization() -> Dict:
     """
     try:
         # Dados do WhatsApp
-        PHONE_NUMBER_ID = "839615479241121"
+        PHONE_NUMBER_ID = "830615479241121"
         WABA_ID = "1505215831318900"
         PHONE_NUMBER = "+1 555 166 7990"
         ORG_ID = 19

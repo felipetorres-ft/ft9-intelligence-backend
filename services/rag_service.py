@@ -207,7 +207,7 @@ Responda baseando-se no contexto fornecido acima. Se o contexto não contiver in
                     {"role": "user", "content": enriched_prompt}
                 ],
                 temperature=0.7,
-                max_tokens=500
+                max_completion_tokens=500
             )
             
             answer = response.choices[0].message.content
