@@ -60,9 +60,10 @@ async def process_csv_and_broadcast(csv_content: bytes):
 
         contatos = []
         for row in csv_reader:
-            numero = (row.get("numero") or "").strip()
-            nome = (row.get("nome") or "").strip() or "Cliente"
-            clinica = (row.get("clinica") or "FT9").strip()
+            # Aceitar tanto formato antigo (numero/nome/clinica) quanto novo (phone/name/custom1)
+            numero = (row.get("numero") or row.get("phone") or "").strip()
+            nome = (row.get("nome") or row.get("name") or "").strip() or "Cliente"
+            clinica = (row.get("clinica") or row.get("custom1") or "FT9").strip()
 
             if not numero:
                 logger.warning(f"[BROADCAST] Linha ignorada sem número: {row}")
