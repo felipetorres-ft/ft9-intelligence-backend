@@ -28,7 +28,7 @@ async def generate_ai9_response(mensagem: str, telefone: str) -> str:
         logger.info(f"[AI9] Gerando resposta para {telefone}: {mensagem[:50]}...")
         
         completion = await client.chat.completions.create(
-            model="gpt-5.1",
+            model="gpt-4o-mini",  # ★ modelo correto
             messages=[
                 {
                     "role": "system",
