@@ -48,7 +48,14 @@ async def enviar_mensagem_texto(client: httpx.AsyncClient, numero: str, nome: st
         logger.error(f"[BROADCAST-TEXTO] Erro ao enviar para {numero}: {e}")
 
 
-async def process_csv_and_broadcast(csv_content: bytes):
+def process_csv_and_broadcast(csv_content: bytes):
+    """
+    Função síncrona que executa o processamento async em background.
+    """
+    asyncio.run(_process_csv_and_broadcast(csv_content))
+
+
+async def _process_csv_and_broadcast(csv_content: bytes):
     """
     Processa o CSV e dispara mensagens em lotes, em background.
     """

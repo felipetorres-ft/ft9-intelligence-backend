@@ -18,8 +18,7 @@ router = APIRouter(prefix="/broadcast", tags=["Broadcast"])
 async def send_broadcast(
     csv_file: UploadFile,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_active_user),
-    session: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Inicia disparo massivo via upload de CSV
