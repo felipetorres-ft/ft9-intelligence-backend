@@ -47,7 +47,7 @@ async def generate_ai9_response(mensagem: str, telefone: str) -> str:
                 }
             ],
             temperature=0.7,
-            max_tokens=500
+            max_completion_tokens=500  # ★ CORREÇÃO CRÍTICA: substituir max_tokens
         )
         
         resposta = completion.choices[0].message.content.strip()
@@ -58,8 +58,11 @@ async def generate_ai9_response(mensagem: str, telefone: str) -> str:
     except Exception as e:
         logger.error(f"[AI9] Erro ao gerar resposta: {str(e)}")
         # Resposta de fallback em caso de erro
-        return (
-            "Olá! Sou a Camila da FT9 Intelligence. "
-            "No momento estou com dificuldades técnicas, mas em breve retorno seu contato. "
-            "Obrigada pela compreensão! 😊"
+        # ★ NOVO FALLBACK 100% COMPATÍVEL COM Z-API (sem emojis, sem unicode proibido)
+        fallback_text = (
+            "Olá! Aqui é a Camila da FT9 Intelligence. "
+            "No momento estou com dificuldades técnicas para responder automaticamente, "
+            "mas já estou resolvendo. Pode enviar sua dúvida que retornarei em seguida."
         )
+        
+        return fallback_text

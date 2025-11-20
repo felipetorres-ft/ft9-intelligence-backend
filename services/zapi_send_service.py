@@ -31,16 +31,25 @@ async def enviar_msg(numero: str, texto: str) -> dict:
 
     payload = {
         "phone": numero,
-        "message": texto
+        "message": texto  # ★ garantir que vem sem emojis proibidos
     }
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=10) as client:  # ★ timeout seguro
             response = await client.post(url, json=payload)
-            logger.info(f"Mensagem enviada para {numero}: {response.status_code}")
+            
+            if response.status_code != 200:
+                logger.error(
+                    f"❌ Falha Z-API {response.status_code}: {response.text}"
+                )
+            else:
+                logger.info(f"Mensagem enviada para {numero}: {response.status_code}")
+            
             return response.json()
     except Exception as e:
-        logger.error(f"Erro ao enviar mensagem para {numero}: {e}")
+        logger.error(
+            f"❌ Erro ao enviar Z-API: {e}"
+        )
         return {"error": str(e)}
 
 
