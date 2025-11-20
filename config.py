@@ -32,14 +32,14 @@ class Settings:
         self.whatsapp_api_url = os.getenv('WHATSAPP_API_URL', 'https://graph.facebook.com/v18.0')
         
         # Z-API Configuration
-        self.zapi_instance_id = os.getenv('ZAPI_INSTANCE_ID', '3EA61512E6CBA19EB3A9E243A9EE21C6')
-        self.zapi_token = os.getenv('ZAPI_TOKEN', '212CBB5256257083A240A4EC')
-        self.zapi_client_token = os.getenv('ZAPI_CLIENT_TOKEN', 'Fb455df012da4465e89fe75bfa1e5c1d8S')
+        self.zapi_instance_id = os.getenv('ZAPI_INSTANCE_ID', '3EA6AC5A02CF61C3803272620DC9C8F4')
+        self.zapi_token = os.getenv('ZAPI_TOKEN', 'D98639365A7004E07409753B')
+        self.zapi_client_token = os.getenv('ZAPI_CLIENT_TOKEN', 'Fed53563af9524da680d80deedafd2f52S')
         self.zapi_base_url = os.getenv('ZAPI_BASE_URL', 'https://api.z-api.io')
         
         # OpenAI
         self.openai_api_key = os.getenv('OPENAI_API_KEY', '')
-        self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
+        self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-5.1')
         
         # Database
         database_url = os.getenv(
