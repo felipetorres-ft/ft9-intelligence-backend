@@ -10,6 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Cliente OpenAI (API key já configurada em variável de ambiente)
+# Patch AI9 v2 - 20NOV2025 23:40 - max_tokens fix
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
