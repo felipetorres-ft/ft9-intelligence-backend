@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 # Credenciais Z-API
 ZAPI_INSTANCE_ID = os.getenv('ZAPI_INSTANCE_ID', '3EA61512E6CBA19EB3A9E243A9EE21C6')
 ZAPI_TOKEN = os.getenv('ZAPI_TOKEN', '212CBB5256257083A240A4EC')
-ZAPI_BASE_URL = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_TOKEN}"
+ZAPI_CLIENT_TOKEN = os.getenv('ZAPI_CLIENT_TOKEN', 'Fed53563af9524da680d80deedafd2f52S')
+ZAPI_BASE_URL = "https://api.z-api.io"
 
 
 async def enviar_msg(numero: str, texto: str) -> dict:
@@ -27,16 +28,24 @@ async def enviar_msg(numero: str, texto: str) -> dict:
     Returns:
         dict: Response da Z-API
     """
-    url = f"{ZAPI_BASE_URL}/send-text"
+    url = f"{ZAPI_BASE_URL}/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_TOKEN}/send-text"
 
     payload = {
         "phone": numero,
-        "message": texto  # ★ garantir que vem sem emojis proibidos
+        "message": texto
+    }
+
+    headers = {
+        "Client-Token": ZAPI_CLIENT_TOKEN  # OBRIGATÓRIO
     }
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:  # ★ timeout seguro
-            response = await client.post(url, json=payload)
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers
+            )
             
             if response.status_code != 200:
                 logger.error(
@@ -71,7 +80,7 @@ async def enviar_template(
     Returns:
         dict: Response da Z-API
     """
-    url = f"{ZAPI_BASE_URL}/send-template"
+    url = f"{ZAPI_BASE_URL}/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_TOKEN}/send-template"
     
     payload = {
         "phone": numero,
@@ -82,9 +91,17 @@ async def enviar_template(
     if buttons:
         payload["buttons"] = buttons
 
+    headers = {
+        "Client-Token": ZAPI_CLIENT_TOKEN  # OBRIGATÓRIO
+    }
+
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(url, json=payload)
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers
+            )
             logger.info(f"Template enviado para {numero}: {response.status_code}")
             return response.json()
     except Exception as e:

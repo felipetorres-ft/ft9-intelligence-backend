@@ -1,6 +1,6 @@
 """
 FT9 Intelligence - AI9 Service
-Serviço de geração de respostas usando GPT-5.1 (Camila)
+Serviço de geração de respostas usando GPT-4o-mini (Camila)
 """
 
 from openai import AsyncOpenAI
@@ -15,7 +15,7 @@ client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 async def generate_ai9_response(mensagem: str, telefone: str) -> str:
     """
-    Gera resposta da Camila (AI9) usando GPT-5.1
+    Gera resposta da Camila (AI9) usando GPT-4o-mini
     
     Args:
         mensagem: Mensagem recebida do cliente
@@ -27,8 +27,8 @@ async def generate_ai9_response(mensagem: str, telefone: str) -> str:
     try:
         logger.info(f"[AI9] Gerando resposta para {telefone}: {mensagem[:50]}...")
         
-        completion = await client.chat.completions.create(
-            model="gpt-4o-mini",  # ★ modelo correto
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",    # Modelo correto
             messages=[
                 {
                     "role": "system",
@@ -46,19 +46,19 @@ async def generate_ai9_response(mensagem: str, telefone: str) -> str:
                     "content": mensagem
                 }
             ],
-            temperature=0.7,
-            max_completion_tokens=500  # ★ CORREÇÃO CRÍTICA: substituir max_tokens
+            max_tokens=500,         # Compatível com o SDK instalado
+            temperature=0.7
         )
         
-        resposta = completion.choices[0].message.content.strip()
-        logger.info(f"[AI9] Resposta gerada: {resposta[:100]}...")
+        ai_text = response.choices[0].message.content
+        logger.info(f"[AI9] Resposta gerada: {ai_text[:100]}...")
         
-        return resposta
+        return ai_text
         
     except Exception as e:
-        logger.error(f"[AI9] Erro ao gerar resposta: {str(e)}")
-        # Resposta de fallback em caso de erro
-        # ★ NOVO FALLBACK 100% COMPATÍVEL COM Z-API (sem emojis, sem unicode proibido)
+        logger.error(f"[AI9] Erro ao gerar resposta: {e}")
+        
+        # Fallback seguro compatível com Z-API
         fallback_text = (
             "Olá! Aqui é a Camila da FT9 Intelligence. "
             "No momento estou com dificuldades técnicas para responder automaticamente, "
