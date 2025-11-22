@@ -51,6 +51,15 @@ async def mini_cinthya_chat(payload: ChatRequest):
         with open(persona_path, 'r', encoding='utf-8') as f:
             system_prompt = f.read()
         
+        # Patch AI9 v1.1 - Respostas curtas e bem formatadas
+        system_prompt += "\n\n---\n\n**INSTRUÇÕES DE FORMATAÇÃO:**\n"
+        system_prompt += "A partir de agora, responda sempre de forma curta, clara e organizada.\n"
+        system_prompt += "Use no máximo 3 a 5 linhas por resposta.\n"
+        system_prompt += "Use quebras de linha.\n"
+        system_prompt += "Não use parágrafos longos.\n"
+        system_prompt += "Nunca envie blocos extensos de texto.\n"
+        system_prompt += "Esteja sempre suave, elegante e objetiva."
+        
         # Preparar mensagens
         messages = [
             {"role": "system", "content": system_prompt}
