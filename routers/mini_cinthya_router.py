@@ -1,10 +1,10 @@
 """
 Mini Cinthya Chat Router
-Implementado conforme arquitetura da AI9
+Implementado conforme patch oficial da AI9
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
 import os
 from pathlib import Path
 
@@ -22,36 +22,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
-# Carregar persona completa
-def load_persona() -> str:
-    """Carrega e concatena todos os arquivos de persona da Mini Cinthya"""
-    persona_dir = Path(__file__).parent.parent / "personas" / "mini-cinthya"
-    
-    files = [
-        "persona_mestre_mini_cinthya.md",
-        "mini_cinthya_captadora.md",
-        "filosofia_cinthya.md",
-        "slogan_oficial.txt",
-        "formacoes_e_especialidades.md",
-        "abordagem_regenerativa.md"
-    ]
-    
-    persona_parts = []
-    for filename in files:
-        file_path = persona_dir / filename
-        if file_path.exists():
-            with open(file_path, 'r', encoding='utf-8') as f:
-                persona_parts.append(f.read())
-        else:
-            raise FileNotFoundError(f"Arquivo de persona não encontrado: {filename}")
-    
-    return "\n\n".join(persona_parts)
-
-# Carregar persona uma vez no início
-PERSONA = load_persona()
-
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def mini_cinthya_chat(payload: ChatRequest):
     """
     Endpoint de chat com a Mini Cinthya
     Recebe mensagem e histórico, retorna resposta via OpenAI API
@@ -67,21 +39,33 @@ async def chat(request: ChatRequest):
         
         client = OpenAI(api_key=api_key)
         
+        # Carregar persona
+        persona_path = Path("/app/kdb/cinthya/persona_mestre_mini_cinthya.md")
+        if not persona_path.exists():
+            # Fallback para ambiente local
+            persona_path = Path(__file__).parent.parent / "kdb" / "cinthya" / "persona_mestre_mini_cinthya.md"
+        
+        if not persona_path.exists():
+            raise HTTPException(status_code=500, detail="Arquivo de persona não encontrado")
+        
+        with open(persona_path, 'r', encoding='utf-8') as f:
+            system_prompt = f.read()
+        
         # Preparar mensagens
         messages = [
-            {"role": "system", "content": PERSONA}
+            {"role": "system", "content": system_prompt}
         ]
         
         # Adicionar histórico
-        for msg in request.history:
+        for msg in payload.history:
             messages.append({"role": msg.role, "content": msg.content})
         
         # Adicionar mensagem atual
-        messages.append({"role": "user", "content": request.message})
+        messages.append({"role": "user", "content": payload.message})
         
         # Chamar OpenAI API
         completion = client.chat.completions.create(
-            model="gpt-4.1",
+            model="gpt-4o",
             messages=messages,
             temperature=0.5
         )
@@ -99,8 +83,12 @@ async def chat(request: ChatRequest):
 @router.get("/health")
 async def health_check():
     """Health check do serviço Mini Cinthya"""
+    persona_path = Path("/app/kdb/cinthya/persona_mestre_mini_cinthya.md")
+    if not persona_path.exists():
+        persona_path = Path(__file__).parent.parent / "kdb" / "cinthya" / "persona_mestre_mini_cinthya.md"
+    
     return {
         "status": "ok",
         "service": "Mini Cinthya Chat",
-        "persona_loaded": len(PERSONA) > 0
+        "persona_exists": persona_path.exists()
     }
