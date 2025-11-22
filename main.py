@@ -16,6 +16,7 @@ from routers.dashboard import router as dashboard_router
 from routers.funnel import router as funnel_router
 from routers.broadcast_router import router as broadcast_router
 from routers.zapi_webhook_router import router as zapi_webhook_router
+from routers.mini_cinthya_router import router as mini_cinthya_router
 
 # ------------------------------------------------------
 # LOGGING (IMPORTANTE PARA DIAGNÓSTICO NO RAILWAY)
@@ -68,6 +69,7 @@ app.include_router(dashboard_router)
 app.include_router(funnel_router)
 app.include_router(broadcast_router, prefix="/api/v1")
 app.include_router(zapi_webhook_router)
+app.include_router(mini_cinthya_router)
 
 # ------------------------------------------------------
 # RODAR LOCALMENTE (Railway ignora)
