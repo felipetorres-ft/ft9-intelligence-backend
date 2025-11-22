@@ -8,7 +8,7 @@ from typing import List
 import os
 from pathlib import Path
 
-router = APIRouter(prefix="/mini-cinthya", tags=["Mini Cinthya"])
+router = APIRouter(tags=["Mini Cinthya"])
 
 # Modelos de dados
 class ChatMessage(BaseModel):
